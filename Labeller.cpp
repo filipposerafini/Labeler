@@ -154,7 +154,7 @@ int main(int argc, char *argv[]) {
             exit(EXIT_FAILURE);
         }
         for (i = 0; i < label_count; i++)
-            fprintf(file, "%s %d;%d;%d;%d\n", dd->d_name, labels[i].center.x, labels[i].center.y, labels[i].height, labels[i].width);
+            fprintf(file, "%s %d;%d;%d;%d\n", dd->d_name, labels[i].center.x, labels[i].center.y, labels[i].width, labels[i].height);
         fclose(file);
         // Reset label count
         label_count = 0;
@@ -188,10 +188,10 @@ void on_mouse(int event, int x, int y, int, void*) {
                 if (label_count < MAX_LABELS) {
                     CvPoint center = cvPoint((corner.x + opposite_corner.x)/2, (corner.y + opposite_corner.y)/2);
                     labels[label_count].center = center;
-                    labels[label_count].height = abs(center.y - corner.y);
                     labels[label_count].width = abs(center.x - corner.x);
+                    labels[label_count].height = abs(center.y - corner.y);
                     labels[label_count].selected = false;
-                    printf("Label %d = Center:%d,%d, height:%d, width:%d\n", label_count, labels[label_count].center.x, labels[label_count].center.y, labels[label_count].height, labels[label_count].width);
+                    printf("Label %d = Center:%d,%d, width:%d, height:%d\n", label_count, labels[label_count].center.x, labels[label_count].center.y, labels[label_count].width, labels[label_count].height);
                     label_count++;
                 } else {
                     printf("Label not saved: Too many labels\n");
