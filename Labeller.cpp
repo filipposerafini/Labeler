@@ -89,7 +89,7 @@ int main(int argc, char *argv[]) {
                 continue;
             }
         }
-
+        
         // Load Image
         img = cvLoadImage(src_img);
         if (!img) {
@@ -98,16 +98,16 @@ int main(int argc, char *argv[]) {
         }
         printf("Loaded %s: %dx%d, depth: %d, nChannels: %d\n", src_img, img->width, img->height, img->depth, img->nChannels);
         free(src_img);
-
+        
         cvShowImage(WINDOW_NAME, img);
-
+        
         // Search and load labels from file
         if (append) {
             load_labels(outfile, dd->d_name, labels, &label_count);
             update_image(img, labels, label_count);
         }
-
-        // Work on image
+        
+        // Work on current image
         end = false;
         while (!end) {
             if (drawing || moving || max) {
@@ -160,20 +160,17 @@ int main(int argc, char *argv[]) {
         label_count = 0;
     }
 
-    if (rename(".tmp", outfile) != 0) {
+    if (rename(".tmp", outfile) != 0)
         printf("Error renaming the temporary file\n");
-    }
 
     closedir(dir);
     free(outfile);
     cvDestroyWindow(WINDOW_NAME);
 
-    printf("Press any key to terminate...\n");
-    getchar();
-
     return 0;
 }
 
+// Mouse event handler
 void on_mouse(int event, int x, int y, int, void*) {
     int i;
     switch (event) {
@@ -237,6 +234,7 @@ void on_mouse(int event, int x, int y, int, void*) {
     return;
 }
 
+//Refresh the image redrawing the lables
 void update_image(IplImage* img, label* list, int count) {
     IplImage* tmp = cvCreateImage(cvSize(img->width, img->height), img->depth, img->nChannels);
     cvCopy(img, tmp, NULL);

@@ -9,6 +9,7 @@
 
 #define MAX_LABELS 64
 #define WINDOW_NAME "Image"
+#define ALPHA 0.5
 
 typedef struct {
     CvPoint center;
