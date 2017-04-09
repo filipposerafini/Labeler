@@ -3,16 +3,16 @@
 bool drawing = false;
 bool moving = false;
 bool max = false;
+int label_count = 0;
+int selected = -1;
 CvPoint corner;
 CvPoint opposite_corner;
 CvScalar color = cvScalar(255, 0, 0);
 CvScalar colorSelected = cvScalar(0, 0, 255);
 label labels[MAX_LABELS];
-int label_count = 0;
-int selected = -1;
 
 void on_mouse(int event, int x, int y, int, void*); 
-void update_image(IplImage* img, label* list, int count);
+void update_image(IplImage *img, label *list, int count);
 
 int main(int argc, char *argv[]) {
 
@@ -23,23 +23,26 @@ int main(int argc, char *argv[]) {
     }
 
     // Check source image directory existence
-    DIR* dir;
+    DIR *dir;
     if ((dir = opendir(argv[1])) == NULL) {
         printf("Could not open directory %s\n", argv[1]);
         exit(EXIT_FAILURE);
     }
+    char *dest_dir = (char*)malloc(sizeof(char) * strlen(argv[1]) + 9);
+    sprintf(dest_dir, "%s/Labelled", argv[1]);
+    if (mkdir(dest_dir, 0755) == 0)
+        printf("Created destination folder for labelled image\n");
 
     // Check output file existence
-    char* outfile = (char*)malloc(sizeof(char) * strlen(argv[2]) + 4);
+    char *outfile = (char*)malloc(sizeof(char) * strlen(argv[2]) + 4);
     sprintf(outfile, "%s.csv", argv[2]);
 
-    char ch;
-    FILE* file;
+    FILE *file;
     bool append = false;
 
     if ((file = fopen(outfile, "r")) != NULL) {
         printf("File %s already exists. Do you want to Overwrite it or to Append the output? (O/A) ", outfile);
-        while (ch = getchar()) {
+        while (char ch = getchar()) {
             if (ch == 'O') {
                 fclose(file);
                 if (remove(outfile) != 0) {
@@ -63,16 +66,14 @@ int main(int argc, char *argv[]) {
     cvNamedWindow(WINDOW_NAME, CV_WINDOW_NORMAL);
     cvSetMouseCallback(WINDOW_NAME, on_mouse);
 
-    struct dirent* dd;
-    int i;
-    char *src_img, *p;
+    struct dirent *dd;
+    char tmpfile[8] = "tmpfile";
     bool next = true;
-    bool end;
-    IplImage *img;
 
     // Cycle trought image in source directory
     while ((dd = readdir(dir)) != NULL && next) {
-
+        
+        char *p, *src_img;
         // Analize only .jpg files
         if ((p = strrchr(dd->d_name, '.')) == NULL) {
             printf("Skipped file: %s\n", dd->d_name);
@@ -91,7 +92,7 @@ int main(int argc, char *argv[]) {
         }
         
         // Load Image
-        img = cvLoadImage(src_img);
+        IplImage *img = cvLoadImage(src_img);
         if (!img) {
             printf("Could not load image file: %s\n", src_img);
             continue;
@@ -108,28 +109,77 @@ int main(int argc, char *argv[]) {
         }
         
         // Work on current image
-        end = false;
+        bool end = false;
+        int copied = -1;
         while (!end) {
             if (drawing || moving || max) {
                 update_image(img, labels, label_count);
                 if (max)
                     max = false;
             }
-            ch = cvWaitKey(10);
+            char ch = cvWaitKey(10);
             switch (ch) {
                 // q = Terminate program
                 case 'q':
                     end = true;
                     next = false;
                     break;
-                    // Enter: Next image
-                case 10 :
+                // Enter: Next image
+                case 10:
                     end = true;
+                    break;
+                // c = Copy selected label
+                case 'c':
+                    if (selected >= 0) {
+                        copied = selected; 
+                        printf("Label %d copied\n", copied);
+                    }
+                    break;
+                // p = Paste label
+                case 'p':
+                    if (copied >= 0) {
+                        if (label_count < MAX_LABELS) {
+                            memcpy(&labels[label_count], &labels[copied], sizeof(label));
+                            printf("Label %d pasted\n", label_count);
+                            label_count++;
+                            update_image(img, labels, label_count);
+                        } else
+                            printf("Label not pasted: too many labels\n");
+                    }
+                    break;
+                    // ARROWS //
+                    // Up
+                case 82:
+                    if (selected >= 0) {
+                        labels[selected].center.y--;
+                        update_image(img, labels, label_count);
+                    }
+                    break;
+                    // Down
+                case 84:
+                    if (selected >= 0) {
+                        labels[selected].center.y++;
+                        update_image(img, labels, label_count);
+                    }
+                    break;
+                    // Left
+                case 81:
+                    if (selected >= 0) {
+                        labels[selected].center.x--;
+                        update_image(img, labels, label_count);
+                    }
+                    break;
+                    // Right
+                case 83:
+                    if (selected >= 0) {
+                        labels[selected].center.x++;
+                        update_image(img, labels, label_count);
+                    }
                     break;
                     // Backspace: Delete selected label
                 case 8 :
                     if (selected >= 0) {
-                        for (i = selected; i < label_count; i++)
+                        for (int i = selected; i < label_count; i++)
                             labels[i] = labels[i + 1];
                         printf("Deleted label %d\n", selected);
                         selected = -1;
@@ -140,31 +190,29 @@ int main(int argc, char *argv[]) {
                     // r: Reset current image
                 case 'r':
                     label_count = 0;
+                    copied = -1;
+                    selected = -1;
                     cvShowImage(WINDOW_NAME, img);
                     break;
                 default:
                     break;
             }
         }
-        cvReleaseImage(&img);
 
         // Save labels to file
-        if ((file = fopen(".tmp","a")) == NULL) {
-            printf("Error writing on output.csv\n");
-            exit(EXIT_FAILURE);
-        }
-        for (i = 0; i < label_count; i++)
-            fprintf(file, "%s %d;%d;%d;%d\n", dd->d_name, labels[i].center.x, labels[i].center.y, labels[i].width, labels[i].height);
-        fclose(file);
+        save_labels(tmpfile, dd->d_name, dest_dir, labels, label_count, img, color);
+        cvReleaseImage(&img);
+
         // Reset label count
         label_count = 0;
     }
 
-    if (rename(".tmp", outfile) != 0)
+    if (rename(tmpfile, outfile) != 0)
         printf("Error renaming the temporary file\n");
 
     closedir(dir);
     free(outfile);
+    free(dest_dir);
     cvDestroyWindow(WINDOW_NAME);
 
     return 0;
@@ -172,7 +220,6 @@ int main(int argc, char *argv[]) {
 
 // Mouse event handler
 void on_mouse(int event, int x, int y, int, void*) {
-    int i;
     switch (event) {
         case CV_EVENT_LBUTTONDOWN:
             if (!moving) {
@@ -201,7 +248,7 @@ void on_mouse(int event, int x, int y, int, void*) {
             break;
         case CV_EVENT_RBUTTONDOWN:
             selected = -1;
-            for (i = 0; i < label_count; i++) {
+            for (int i = 0; i < label_count; i++) {
                 if ((x >= labels[i].center.x - labels[i].width && x <= labels[i].center.x + labels[i].width) && 
                         (y >= labels[i].center.y - labels[i].height && y <= labels[i].center.y + labels[i].height)) {
                     if (!labels[i].selected && selected < 0) {
@@ -235,8 +282,8 @@ void on_mouse(int event, int x, int y, int, void*) {
 }
 
 //Refresh the image redrawing the lables
-void update_image(IplImage* img, label* list, int count) {
-    IplImage* tmp = cvCreateImage(cvSize(img->width, img->height), img->depth, img->nChannels);
+void update_image(IplImage *img, label *list, int count) {
+    IplImage *tmp = cvCreateImage(cvSize(img->width, img->height), img->depth, img->nChannels);
     cvCopy(img, tmp, NULL);
 
     if (drawing)

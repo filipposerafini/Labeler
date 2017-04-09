@@ -1,9 +1,8 @@
 #include <stdio.h>
-#include <unistd.h>
 #include <dirent.h> 
 #include <string.h>
-#include <fcntl.h>
 #include <sys/types.h>
+#include <sys/stat.h>
 #include <opencv/cv.h>
 #include <opencv/highgui.h>
 
@@ -20,4 +19,4 @@ typedef struct {
 
 void draw_label(IplImage* img, CvPoint corner1, CvPoint corner2, CvScalar color);
 void load_labels(char* filename, char* imagename, label* labels, int* count);
-
+void save_labels(char* filename, char* imagename, char* dest_dir, label* labels, int count, IplImage *img, CvScalar color);

@@ -1,8 +1,8 @@
 #include "Label.h"
 
 // Draw a transparent label on the image
-void draw_label(IplImage* image, CvPoint corner1, CvPoint corner2, CvScalar color) {
-    IplImage* rect = cvCreateImage(cvSize(image->width, image->height),image->depth, image->nChannels);
+void draw_label(IplImage *image, CvPoint corner1, CvPoint corner2, CvScalar color) {
+    IplImage *rect = cvCreateImage(cvSize(image->width, image->height),image->depth, image->nChannels);
     cvCopy(image, rect, NULL);
     cvRectangle(rect, corner1, corner2, color, -1, 8, 0);
     cvAddWeighted(rect, ALPHA, image, 1 - ALPHA, 0, image);
@@ -12,8 +12,8 @@ void draw_label(IplImage* image, CvPoint corner1, CvPoint corner2, CvScalar colo
 }
 
 // Load labels from files
-void load_labels(char* filename, char* imagename, label* labels, int* count) {
-    FILE* file;
+void load_labels(char *filename, char *imagename, label *labels, int *count) {
+    FILE *file;
     char name[64];
     int i = 0, x, y, h, w;
 
@@ -42,3 +42,29 @@ void load_labels(char* filename, char* imagename, label* labels, int* count) {
     return;
 }
 
+void save_labels(char *filename, char *imagename, char* dest_dir, label *labels, int count, IplImage *img, CvScalar color) {
+    FILE *file;
+    if ((file = fopen(filename,"a")) == NULL) {
+        printf("Error writing on file\n");
+        exit(EXIT_FAILURE);
+    }
+
+    IplImage *tmp = cvCreateImage(cvSize(img->width, img->height), img->depth, img->nChannels);
+    cvCopy(img, tmp, NULL);
+
+    for (int i = 0; i < count; i++) {
+        fprintf(file, "%s %d;%d;%d;%d\n", imagename, labels[i].center.x, labels[i].center.y, labels[i].width, labels[i].height);
+        CvPoint corner1 = cvPoint(labels[i].center.x + labels[i].width, labels[i].center.y + labels[i].height);
+        CvPoint corner2 = cvPoint(2 * labels[i].center.x - corner1.x, 2 * labels[i].center.y - corner1.y);
+        draw_label(tmp, corner1, corner2, color);
+    }
+    fclose(file);
+    
+    char *save_file = (char*)malloc(strlen(dest_dir) + strlen(imagename) + 1);
+    sprintf(save_file, "%s/%s", dest_dir, imagename);
+
+    cvSaveImage(save_file, tmp);
+
+    cvReleaseImage(&tmp);
+    free(save_file);
+}
