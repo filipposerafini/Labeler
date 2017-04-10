@@ -3,7 +3,6 @@
 bool drawing = false;
 bool moving = false;
 bool max = false;
-bool moved = false;
 int label_count = 0;
 int selected = -1;
 CvPoint corner;
@@ -209,16 +208,19 @@ int main(int argc, char *argv[]) {
         }
         
         // Save labels to file
-        save_labels(tmpfile, dd->d_name, dest_dir, labels, label_count, img, color);
+        if (label_count > 0)
+            save_labels(tmpfile, dd->d_name, dest_dir, labels, label_count, img, color);
         cvReleaseImage(&img);
         
         // Reset label count
         label_count = 0;
+        selected = -1;
     }
 
     if (rename(tmpfile, outfile) != 0)
         printf("Error renaming the temporary file\n");
 
+    // Relese used resources
     closedir(dir);
     free(outfile);
     free(dest_dir);
@@ -262,7 +264,6 @@ void on_mouse(int event, int x, int y, int, void*) {
             break;
         case CV_EVENT_RBUTTONDOWN:
             selected = -1;
-            moved = false;
             for (int i = 0; i < label_count; i++) {
                 if ((x >= labels[i].center.x - labels[i].width && x <= labels[i].center.x + labels[i].width) && 
                         (y >= labels[i].center.y - labels[i].height && y <= labels[i].center.y + labels[i].height)) {
@@ -292,7 +293,6 @@ void on_mouse(int event, int x, int y, int, void*) {
             if (drawing)
                 opposite_corner = cvPoint(x, y);
             else if (moving && selected >= 0) {
-                moved = true;
                 labels[selected].center.x = x;
                 labels[selected].center.y = y;
             }
