@@ -17,6 +17,8 @@ typedef struct {
     bool selected;
 } label;
 
-void draw_label(IplImage* img, CvPoint corner1, CvPoint corner2, CvScalar color);
-void load_labels(char* filename, char* imagename, label* labels, int* count);
-void save_labels(char* filename, char* imagename, char* dest_dir, label* labels, int count, IplImage *img, CvScalar color);
+void print_label(label l);
+void print_all(label *labels, int count, int selected, int copied);
+void draw_label(IplImage *img, CvPoint corner1, CvPoint corner2, CvScalar color);
+void load_labels(char *filename, char *imagename, label *labels, int *count);
+void save_labels(char *filename, char *imagename, char *dest_dir, label *labels, int count, IplImage *img, CvScalar color);

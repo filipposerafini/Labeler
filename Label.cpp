@@ -1,5 +1,24 @@
 #include "Label.h"
 
+// Print label informations
+void print_label(label l) {
+    printf("Center: %dx%d, width: %d, height: %d\n", l.center.x, l.center.y, l.width, l.height);
+}
+
+// Print information for all labels
+void print_all(label* labels, int count, int selected, int copied) {
+    if (count > 0) {
+        printf("\n**********************************************************************\n");
+        for (int i = 0; i < count; i++) {
+            printf("Label %d -> ", i);
+            if (selected == i) printf("(selected) ");
+            if (copied == i) printf("(copied) ");
+            print_label(labels[i]);
+        }
+        printf("**********************************************************************\n\n");
+    }
+}
+
 // Draw a transparent label on the image
 void draw_label(IplImage *image, CvPoint corner1, CvPoint corner2, CvScalar color) {
     IplImage *rect = cvCreateImage(cvSize(image->width, image->height),image->depth, image->nChannels);
@@ -59,7 +78,7 @@ void save_labels(char *filename, char *imagename, char* dest_dir, label *labels,
         draw_label(tmp, corner1, corner2, color);
     }
     fclose(file);
-    
+
     char *save_file = (char*)malloc(strlen(dest_dir) + strlen(imagename) + 1);
     sprintf(save_file, "%s/%s", dest_dir, imagename);
 

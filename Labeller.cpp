@@ -3,6 +3,7 @@
 bool drawing = false;
 bool moving = false;
 bool max = false;
+bool moved = false;
 int label_count = 0;
 int selected = -1;
 CvPoint corner;
@@ -140,45 +141,53 @@ int main(int argc, char *argv[]) {
                     if (copied >= 0) {
                         if (label_count < MAX_LABELS) {
                             memcpy(&labels[label_count], &labels[copied], sizeof(label));
-                            printf("Label %d pasted\n", label_count);
+                            labels[label_count].selected = false;
+                            printf("Label %d pasted -> ", label_count);
+                            print_label(labels[label_count]);
                             label_count++;
                             update_image(img, labels, label_count);
                         } else
                             printf("Label not pasted: too many labels\n");
                     }
                     break;
-                    // ARROWS //
-                    // Up
+                // d = Debug print
+                case 'd':
+                    print_all(labels, label_count, selected, copied);
+                    break;
+                // ARROWS //
+                // Up
                 case 82:
                     if (selected >= 0) {
                         labels[selected].center.y--;
                         update_image(img, labels, label_count);
                     }
                     break;
-                    // Down
+                // Down
                 case 84:
                     if (selected >= 0) {
                         labels[selected].center.y++;
                         update_image(img, labels, label_count);
                     }
                     break;
-                    // Left
+                // Left
                 case 81:
                     if (selected >= 0) {
                         labels[selected].center.x--;
                         update_image(img, labels, label_count);
                     }
                     break;
-                    // Right
+                // Right
                 case 83:
                     if (selected >= 0) {
                         labels[selected].center.x++;
                         update_image(img, labels, label_count);
                     }
                     break;
-                    // Backspace: Delete selected label
+                // Backspace: Delete selected label
                 case 8 :
                     if (selected >= 0) {
+                        if (selected == copied)
+                            copied = -1;
                         for (int i = selected; i < label_count; i++)
                             labels[i] = labels[i + 1];
                         printf("Deleted label %d\n", selected);
@@ -187,7 +196,7 @@ int main(int argc, char *argv[]) {
                         update_image(img, labels, label_count);
                     }
                     break;
-                    // r: Reset current image
+                // r: Reset current image
                 case 'r':
                     label_count = 0;
                     copied = -1;
@@ -198,11 +207,11 @@ int main(int argc, char *argv[]) {
                     break;
             }
         }
-
+        
         // Save labels to file
         save_labels(tmpfile, dd->d_name, dest_dir, labels, label_count, img, color);
         cvReleaseImage(&img);
-
+        
         // Reset label count
         label_count = 0;
     }
@@ -223,6 +232,10 @@ void on_mouse(int event, int x, int y, int, void*) {
     switch (event) {
         case CV_EVENT_LBUTTONDOWN:
             if (!moving) {
+                if (selected >= 0) {
+                    labels[selected].selected = false;
+                    selected = -1;
+                }
                 corner = cvPoint(x, y);
                 opposite_corner = cvPoint(x, y);
                 drawing = true;
@@ -238,7 +251,8 @@ void on_mouse(int event, int x, int y, int, void*) {
                     labels[label_count].width = abs(center.x - corner.x);
                     labels[label_count].height = abs(center.y - corner.y);
                     labels[label_count].selected = false;
-                    printf("Label %d = Center:%d,%d, width:%d, height:%d\n", label_count, labels[label_count].center.x, labels[label_count].center.y, labels[label_count].width, labels[label_count].height);
+                    printf("Label %d -> ", label_count);
+                    print_label(labels[label_count]);
                     label_count++;
                 } else {
                     printf("Label not saved: Too many labels\n");
@@ -248,30 +262,37 @@ void on_mouse(int event, int x, int y, int, void*) {
             break;
         case CV_EVENT_RBUTTONDOWN:
             selected = -1;
+            moved = false;
             for (int i = 0; i < label_count; i++) {
                 if ((x >= labels[i].center.x - labels[i].width && x <= labels[i].center.x + labels[i].width) && 
                         (y >= labels[i].center.y - labels[i].height && y <= labels[i].center.y + labels[i].height)) {
-                    if (!labels[i].selected && selected < 0) {
-                        labels[i].selected = true;
+                    if (labels[i].selected) {
                         selected = i;
-                        printf("Selected label %d\n", selected);
+                    }
+                    else if (!labels[i].selected && selected < 0) {
+                        selected = i;
                     }
                 } else
                     labels[i].selected = false;
+            }
+            if (selected >= 0) {
+                labels[selected].selected = true;
+                printf("Selected label %d\n", selected);
             }
             if (!drawing) {
                 moving = true;
             }
             break;
         case CV_EVENT_RBUTTONUP:
-            if (selected >= 0)
-                labels[selected].selected = false;
+            //if (selected >= 0)
+                //labels[selected].selected = false;
             moving = false;
             break;
         case CV_EVENT_MOUSEMOVE:
             if (drawing)
                 opposite_corner = cvPoint(x, y);
             else if (moving && selected >= 0) {
+                moved = true;
                 labels[selected].center.x = x;
                 labels[selected].center.y = y;
             }
