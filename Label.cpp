@@ -6,7 +6,7 @@ void print_label(label l) {
 }
 
 // Print information for all labels
-void print_all(label* labels, int count, int selected, int copied) {
+void print_all(label *labels, int count, int selected, int copied) {
     if (count > 0) {
         printf("\n**********************************************************************\n");
         for (int i = 0; i < count; i++) {
@@ -46,11 +46,12 @@ void load_labels(char *filename, char *imagename, label *labels, int *count) {
         if (!strcmp(name, imagename)) {
             // Save label for current image
             if (*count < MAX_LABELS) {
-                printf("Label %d loaded from file: Center: %d,%d, height: %d, width: %d\n", *count, x, y, h, w);
                 CvPoint center = cvPoint(x, y);
                 labels[*count].center = center;
                 labels[*count].height = h;
                 labels[*count].width = w;
+                printf("Label %d loaded from file -> ", *count);
+                print_label(labels[*count]);
                 (*count)++;
             } else
                 printf("Label not loaded: too many labels\n");
@@ -61,7 +62,7 @@ void load_labels(char *filename, char *imagename, label *labels, int *count) {
     return;
 }
 
-void save_labels(char *filename, char *imagename, char* dest_dir, label *labels, int count, IplImage *img, CvScalar color) {
+void save_labels(char *filename, char *imagename, char *dest_dir, label *labels, int count, IplImage *img, CvScalar color) {
     FILE *file;
     if ((file = fopen(filename,"a")) == NULL) {
         printf("Error writing on file\n");
