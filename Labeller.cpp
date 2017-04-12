@@ -15,34 +15,54 @@ void on_mouse(int event, int x, int y, int, void*);
 void update_image(IplImage *img, label *list, int count);
 
 int main(int argc, char *argv[]) {
-
-    // Check arguments
-    if (argc < 3) {
-        printf("Usage: %s directory outfile\n", argv[0]);
+    
+    char src_dir[MAX_FILE_NAME_LENGTH];
+    // Check arguments:
+    if (argc > 2) {
+        printf("Usage: %s [source folder] \n", argv[0]);
         exit(EXIT_FAILURE);
+    } else if (argc == 2) {
+        strcpy(src_dir, argv[1]);
+    } else {
+        do {
+            printf("Type source folder: ");
+            if (fgets(src_dir, sizeof(src_dir), stdin) == NULL)
+                printf("Error while reading from stdin\n");
+        } while (strlen(src_dir) <= 1);
+        src_dir[strlen(src_dir) - 1] = '\0';
     }
-
+    
     // Check source image directory existence
     DIR *dir;
-    if ((dir = opendir(argv[1])) == NULL) {
-        printf("Could not open directory %s\n", argv[1]);
+    if ((dir = opendir(src_dir)) == NULL) {
+        printf("Could not open directory %s\n", src_dir);
         exit(EXIT_FAILURE);
     }
-    char *dest_dir = (char*)malloc(sizeof(char) * strlen(argv[1]) + 9);
-    sprintf(dest_dir, "%s/Labelled", argv[1]);
-    if (mkdir(dest_dir, 0755) == 0)
-        printf("Created destination folder for labelled image\n");
 
-    // Check output file existence
-    char *outfile = (char*)malloc(sizeof(char) * strlen(argv[2]) + 4);
-    sprintf(outfile, "%s.csv", argv[2]);
+    // Create destination folder for labelled images
+    char *dest_dir = (char*)malloc(strlen(src_dir) + 9);
+    strcat(dest_dir, "/Labelled");
+
+    // Ask for output file name
+    char outfile[MAX_FILE_NAME_LENGTH];
+    do {
+        printf("Type output file name: ");
+        if (fgets(outfile, sizeof(outfile) - 4, stdin) == NULL)
+            printf("Error while reading from stdin\n");
+    } while (strlen(outfile) <= 1);
+
+    outfile[strlen(outfile) - 1] = '\0';
+    strcat(outfile, ".csv");
 
     FILE *file;
     bool append = false;
+    char ch;
 
+    // Manage already existing file
     if ((file = fopen(outfile, "r")) != NULL) {
-        printf("File %s already exists. Do you want to Overwrite it or to Append the output? (O/A) ", outfile);
-        while (char ch = getchar()) {
+        do {
+            printf("File %s already exists. Do you want to Overwrite it or to Append the output? (O/A) ", outfile);
+            ch = getchar();
             if (ch == 'O') {
                 fclose(file);
                 if (remove(outfile) != 0) {
@@ -56,16 +76,15 @@ int main(int argc, char *argv[]) {
                 append = true;
                 fclose(file);
                 break;
-            } else {
-                printf("File %s already exists. Do you want to Overwrite it or to Append the output? (O/A) ", outfile);
             }
-        }
+        } while (true);
+        getchar();
     } else
-        printf("Writing output to file %s\n", outfile);
+        printf("Writing output to new file %s\n", outfile);
 
     cvNamedWindow(WINDOW_NAME, CV_WINDOW_NORMAL);
     cvSetMouseCallback(WINDOW_NAME, on_mouse);
-
+    
     struct dirent *dd;
     char tmpfile[8] = "tmpfile";
     bool next = true;
@@ -74,15 +93,15 @@ int main(int argc, char *argv[]) {
     while ((dd = readdir(dir)) != NULL && next) {
         
         char *p, *src_img;
-        // Analize only .jpg files
+        // Analize only .jpg/.png files
         if ((p = strrchr(dd->d_name, '.')) == NULL) {
             printf("Skipped file: %s\n", dd->d_name);
             continue;
         }
         else {
-            if (!strcmp(p, ".jpg") || !strcmp(p, ".JPG")) {
-                src_img = (char*)malloc(strlen(dd->d_name) + strlen(argv[1]) + 1);
-                sprintf(src_img, "%s/%s", argv[1], dd->d_name);
+            if (!strcmp(p, ".jpg") || !strcmp(p, ".JPG") || !strcmp(p, ".png") || !strcmp(p, ".PNG")) {
+                src_img = (char*)malloc(strlen(dd->d_name) + strlen(src_dir) + 1);
+                sprintf(src_img, "%s/%s", src_dir, dd->d_name);
                 printf("Opening file: %s\n", dd->d_name);
             }
             else {
@@ -112,10 +131,12 @@ int main(int argc, char *argv[]) {
         bool end = false;
         int copied = -1;
         while (!end) {
-            if (drawing || moving || max) {
+            //update_image(img, labels, label_count);
+            if (drawing || moving)
                 update_image(img, labels, label_count);
-                if (max)
-                    max = false;
+            else if (max) {
+                update_image(img, labels, label_count);
+                max = false;
             }
             char ch = cvWaitKey(10);
             switch (ch) {
@@ -151,7 +172,7 @@ int main(int argc, char *argv[]) {
                     break;
                 // d = Debug print
                 case 'd':
-                    print_all(labels, label_count, selected, copied);
+                    debug_print(labels, label_count, selected, copied);
                     break;
                 // ARROWS //
                 // Up
@@ -208,23 +229,46 @@ int main(int argc, char *argv[]) {
         }
         
         // Save labels to file
-        if (label_count > 0)
+        if (label_count > 0) {
+            if (mkdir(dest_dir, 0755) == 0)
+                printf("Created destination folder for labelled image: %s\n", dest_dir);
             save_labels(tmpfile, dd->d_name, dest_dir, labels, label_count, img, color);
+        }
         cvReleaseImage(&img);
         
         // Reset label count
         label_count = 0;
         selected = -1;
     }
-
-    if (rename(tmpfile, outfile) != 0)
-        printf("Error renaming the temporary file\n");
+    cvDestroyWindow(WINDOW_NAME);
+    
+    // Ask to save output
+    if ((file = fopen(tmpfile, "r")) != NULL) {
+        fclose(file);
+        do {
+            printf("Do you want to save %s? (Y/n) ", outfile);
+            ch = getchar();
+            if (ch == 'y' || ch == 'Y') {
+                if (rename(tmpfile, outfile) != 0) {
+                    printf("Error renaming the temporary file\n");
+                    exit(EXIT_FAILURE);
+                } else
+                    printf("%s saved correctly\n", outfile);
+                break;
+            } else if (ch == 'n' || ch == 'N') {
+                if (remove(tmpfile)) {
+                    printf("Error removing file %s\n", tmpfile);
+                    exit(EXIT_FAILURE);
+                } else
+                    printf("%s not saved\n", outfile);
+                break;
+            }
+        } while(true);
+    }
 
     // Relese used resources
     closedir(dir);
-    free(outfile);
     free(dest_dir);
-    cvDestroyWindow(WINDOW_NAME);
 
     return 0;
 }
@@ -285,8 +329,6 @@ void on_mouse(int event, int x, int y, int, void*) {
             }
             break;
         case CV_EVENT_RBUTTONUP:
-            //if (selected >= 0)
-                //labels[selected].selected = false;
             moving = false;
             break;
         case CV_EVENT_MOUSEMOVE:
@@ -308,11 +350,11 @@ void update_image(IplImage *img, label *list, int count) {
     cvCopy(img, tmp, NULL);
 
     if (drawing)
-        draw_label(tmp, corner, opposite_corner, color);
+        draw_label(tmp, corner, opposite_corner, color, true);
     for (int i = 0; i < count; i++) {
         CvPoint corner1 = cvPoint(list[i].center.x + list[i].width, list[i].center.y + list[i].height);
         CvPoint corner2 = cvPoint(2 * list[i].center.x - corner1.x, 2 * list[i].center.y - corner1.y);
-        list[i].selected ? draw_label(tmp, corner1, corner2, colorSelected) : draw_label(tmp, corner1, corner2, color);
+        list[i].selected ? draw_label(tmp, corner1, corner2, colorSelected, true) : draw_label(tmp, corner1, corner2, color, false);
     }
     cvShowImage(WINDOW_NAME, tmp);
     cvReleaseImage(&tmp);

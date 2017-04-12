@@ -7,8 +7,8 @@
 #include <opencv/highgui.h>
 
 #define MAX_LABELS 64
+#define MAX_FILE_NAME_LENGTH 128
 #define WINDOW_NAME "Image"
-#define ALPHA 0.5
 
 typedef struct {
     CvPoint center;
@@ -18,7 +18,7 @@ typedef struct {
 } label;
 
 void print_label(label l);
-void print_all(label *labels, int count, int selected, int copied);
-void draw_label(IplImage *img, CvPoint corner1, CvPoint corner2, CvScalar color);
+void debug_print(label *labels, int count, int selected, int copied);
+void draw_label(IplImage *img, CvPoint corner1, CvPoint corner2, CvScalar color, bool fill);
 void load_labels(char *filename, char *imagename, label *labels, int *count);
 void save_labels(char *filename, char *imagename, char *dest_dir, label *labels, int count, IplImage *img, CvScalar color);
