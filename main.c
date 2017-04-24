@@ -1,4 +1,10 @@
+#include <dirent.h> 
+#include <string.h>
+#include <sys/types.h>
+#include <sys/stat.h>
 #include "Label.h"
+
+#define MAX_FILE_NAME_LENGTH 128
 
 int main(int argc, char *argv[]) {
 
@@ -68,17 +74,16 @@ int main(int argc, char *argv[]) {
     } else
         printf("Writing output to new file %s\n", outfile);
 
-    static labels_data labelsdata;
+    static data data;
+    static labels labels;
+    data.labels = &labels;
 
-    labelsdata.count = 0;
-    labelsdata.drawing = false;
-    labelsdata.moving = false;
-    labelsdata.max = false;
-    labelsdata.selected = -1;
-    labelsdata.copied = -1;
+    data.labels->count = 0;
+    data.labels->selected = -1;
+    data.labels->copied = -1;
 
     cvNamedWindow(WINDOW_NAME, CV_WINDOW_NORMAL);
-    cvSetMouseCallback(WINDOW_NAME, on_mouse, &labelsdata);
+    cvSetMouseCallback(WINDOW_NAME, on_mouse, &data);
     
     struct dirent *dd;
     char tmpfile[8] = "tmpfile";
@@ -106,32 +111,27 @@ int main(int argc, char *argv[]) {
         }
         
         // Load Image
-        IplImage *img = cvLoadImage(src_img, CV_LOAD_IMAGE_COLOR);
-        if (!img) {
+        data.img = cvLoadImage(src_img, CV_LOAD_IMAGE_COLOR);
+        if (!data.img) {
             printf("Could not load image file: %s\n", src_img);
             continue;
         }
-        printf("Loaded %s: %dx%d, depth: %d, nChannels: %d\n", src_img, img->width, img->height, img->depth, img->nChannels);
+        printf("Loaded %s: %dx%d, depth: %d, nChannels: %d\n", src_img, data.img->width, data.img->height, data.img->depth, data.img->nChannels);
         free(src_img);
         
-        cvShowImage(WINDOW_NAME, img);
+        cvShowImage(WINDOW_NAME, data.img);
         
         // Search and load labels from file
         if (append) {
-            load_labels(outfile, dd->d_name, &labelsdata);
-            update_image(img, &labelsdata);
+            load_labels(outfile, dd->d_name, data.labels);
+            update_image(&data);
         }
         
         // Work on current image
         bool end = false;
-        labelsdata.copied = -1;
         while (!end) {
-            //update_image(img, labels, count);
-            if (labelsdata.drawing || labelsdata.moving)
-                update_image(img, &labelsdata);
-            else if (labelsdata.max) {
-                update_image(img, &labelsdata);
-                labelsdata.max = false;
+            if (data.drawing || data.moving) {
+                update_image(&data);
             }
             char ch = cvWaitKey(10);
             switch (ch) {
@@ -146,77 +146,69 @@ int main(int argc, char *argv[]) {
                     break;
                 // c = Copy selected label
                 case 'c':
-                    if (labelsdata.selected >= 0) {
-                        labelsdata.copied = labelsdata.selected; 
-                        printf("Label %d copied\n", labelsdata.copied);
+                    if (data.labels->selected >= 0) {
+                        data.labels->copied = data.labels->selected; 
+                        printf("Label %d copied\n", data.labels->copied);
                     }
                     break;
                 // p = Paste label
                 case 'p':
-                    if (labelsdata.copied >= 0) {
-                        if (labelsdata.count < MAX_LABELS) {
-                            memcpy(&labelsdata.l[labelsdata.count], &labelsdata.l[labelsdata.copied], sizeof(label));
-                            labelsdata.l[labelsdata.count].selected = false;
-                            printf("Label %d pasted -> ", labelsdata.count);
-                            print_label(labelsdata.l[labelsdata.count]);
-                            labelsdata.count++;
-                            update_image(img, &labelsdata);
+                    if (data.labels->copied >= 0) {
+                        if (paste_label(data.labels, data.labels->copied) == true) {
+                            printf("Label %d pasted -> ", data.labels->count - 1);
+                            print_label(data.labels->label[data.labels->count - 1]);
+                            update_image(&data);
                         } else
                             printf("Label not pasted: too many labels\n");
                     }
                     break;
                 // d = Debug print
                 case 'd':
-                    debug_print(labelsdata);
+                    debug_print(*data.labels);
                     break;
                 // ARROWS //
                 // Up
                 case 82:
-                    if (labelsdata.selected >= 0) {
-                        labelsdata.l[labelsdata.selected].center.y--;
-                        update_image(img, &labelsdata);
+                    if (data.labels->selected >= 0) {
+                        data.labels->label[data.labels->selected].center.y--;
+                        update_image(&data);
                     }
                     break;
                 // Down
                 case 84:
-                    if (labelsdata.selected >= 0) {
-                        labelsdata.l[labelsdata.selected].center.y++;
-                        update_image(img, &labelsdata);
+                    if (data.labels->selected >= 0) {
+                        data.labels->label[data.labels->selected].center.y++;
+                        update_image(&data);
                     }
                     break;
                 // Left
                 case 81:
-                    if (labelsdata.selected >= 0) {
-                        labelsdata.l[labelsdata.selected].center.x--;
-                        update_image(img, &labelsdata);
+                    if (data.labels->selected >= 0) {
+                        data.labels->label[data.labels->selected].center.x--;
+                        update_image(&data);
                     }
                     break;
                 // Right
                 case 83:
-                    if (labelsdata.selected >= 0) {
-                        labelsdata.l[labelsdata.selected].center.x++;
-                        update_image(img, &labelsdata);
+                    if (data.labels->selected >= 0) {
+                        data.labels->label[data.labels->selected].center.x++;
+                        update_image(&data);
                     }
                     break;
                 // Backspace: Delete selected label
                 case 8 :
-                    if (labelsdata.selected >= 0) {
-                        if (labelsdata.selected == labelsdata.copied)
-                            labelsdata.copied = -1;
-                        for (int i = labelsdata.selected; i < labelsdata.count; i++)
-                            labelsdata.l[i] = labelsdata.l[i + 1];
-                        printf("Deleted label %d\n", labelsdata.selected);
-                        labelsdata.selected = -1;
-                        labelsdata.count--;
-                        update_image(img, &labelsdata);
+                    if (data.labels->selected >= 0) {
+                        delete_label(data.labels, &data.labels->selected);
+                        update_image(&data);
                     }
                     break;
                 // r: Reset current image
                 case 'r':
-                    labelsdata.count = 0;
-                    labelsdata.selected = -1;
-                    labelsdata.copied = -1;
-                    cvShowImage(WINDOW_NAME, img);
+                    data.labels->count = 0;
+                    data.labels->selected = -1;
+                    data.labels->copied = -1;
+                    update_image(&data);
+                    /*cvShowImage(WINDOW_NAME, data.img);*/
                     break;
                 default:
                     break;
@@ -224,16 +216,16 @@ int main(int argc, char *argv[]) {
         }
         
         // Save labels to file
-        if (labelsdata.count > 0) {
+        if (data.labels->count > 0) {
             if (mkdir(dest_dir, 0755) == 0)
                 printf("Created destination folder for labelled image: %s\n", dest_dir);
-            save_labels(tmpfile, dd->d_name, dest_dir, labelsdata, img);
+            save_labels(tmpfile, dd->d_name, dest_dir, *data.labels, data.img);
         }
-        cvReleaseImage(&img);
+        cvReleaseImage(&data.img);
         
         // Reset label count
-        labelsdata.count = 0;
-        labelsdata.selected = -1;
+        data.labels->count = 0;
+        data.labels->selected = -1;
     }
     cvDestroyWindow(WINDOW_NAME);
     
