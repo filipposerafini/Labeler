@@ -2,9 +2,23 @@
 #include <string.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <opencv/highgui.h>
 #include "Label.h"
 
 #define MAX_FILE_NAME_LENGTH 128
+#define WINDOW_NAME "Image"
+ 
+typedef struct {
+	labels labels;
+    CvPoint corner;
+    CvPoint opposite_corner;
+    bool drawing;
+    bool moving;
+    IplImage *img;
+} labels_data;
+
+void on_mouse(int event, int x, int y, int, void *data); 
+void update_image(labels_data *data);
 
 int main(int argc, char *argv[]) {
 
@@ -64,8 +78,7 @@ int main(int argc, char *argv[]) {
                     printf("Overwriting file %s\n", outfile);
                 break;
             } else if (ch == 'A') {
-                printf("Appending output to file %s\n", outfile);
-                append = true;
+                printf("Appending output to file %s\n", outfile);                append = true;
                 fclose(file);
                 break;
             }
@@ -74,13 +87,11 @@ int main(int argc, char *argv[]) {
     } else
         printf("Writing output to new file %s\n", outfile);
 
-    static data data;
-    static labels labels;
-    data.labels = &labels;
+    static labels_data data;
 
-    data.labels->count = 0;
-    data.labels->selected = -1;
-    data.labels->copied = -1;
+    data.labels.count = 0;
+    data.labels.selected = -1;
+    data.labels.copied = -1;
 
     cvNamedWindow(WINDOW_NAME, CV_WINDOW_NORMAL);
     cvSetMouseCallback(WINDOW_NAME, on_mouse, &data);
@@ -123,7 +134,7 @@ int main(int argc, char *argv[]) {
         
         // Search and load labels from file
         if (append) {
-            load_labels(outfile, dd->d_name, data.labels);
+            load_labels(outfile, dd->d_name, &data.labels);
             update_image(&data);
         }
         
@@ -146,17 +157,17 @@ int main(int argc, char *argv[]) {
                     break;
                 // c = Copy selected label
                 case 'c':
-                    if (data.labels->selected >= 0) {
-                        data.labels->copied = data.labels->selected; 
-                        printf("Label %d copied\n", data.labels->copied);
+                    if (data.labels.selected >= 0) {
+                        data.labels.copied = data.labels.selected; 
+                        printf("Label %d copied\n", data.labels.copied);
                     }
                     break;
                 // p = Paste label
                 case 'p':
-                    if (data.labels->copied >= 0) {
-                        if (paste_label(data.labels, data.labels->copied) == true) {
-                            printf("Label %d pasted -> ", data.labels->count - 1);
-                            print_label(data.labels->label[data.labels->count - 1]);
+                    if (data.labels.copied >= 0) {
+                        if (paste_label(&data.labels) == true) {
+                            printf("Label %d pasted -> ", data.labels.count - 1);
+                            print_label(data.labels.label[data.labels.count - 1]);
                             update_image(&data);
                         } else
                             printf("Label not pasted: too many labels\n");
@@ -164,49 +175,49 @@ int main(int argc, char *argv[]) {
                     break;
                 // d = Debug print
                 case 'd':
-                    debug_print(*data.labels);
+                    debug_print(data.labels);
                     break;
                 // ARROWS //
                 // Up
                 case 82:
-                    if (data.labels->selected >= 0) {
-                        data.labels->label[data.labels->selected].center.y--;
+                    if (data.labels.selected >= 0) {
+                        data.labels.label[data.labels.selected].center.y--;
                         update_image(&data);
                     }
                     break;
                 // Down
                 case 84:
-                    if (data.labels->selected >= 0) {
-                        data.labels->label[data.labels->selected].center.y++;
+                    if (data.labels.selected >= 0) {
+                        data.labels.label[data.labels.selected].center.y++;
                         update_image(&data);
                     }
                     break;
                 // Left
                 case 81:
-                    if (data.labels->selected >= 0) {
-                        data.labels->label[data.labels->selected].center.x--;
+                    if (data.labels.selected >= 0) {
+                        data.labels.label[data.labels.selected].center.x--;
                         update_image(&data);
                     }
                     break;
                 // Right
                 case 83:
-                    if (data.labels->selected >= 0) {
-                        data.labels->label[data.labels->selected].center.x++;
+                    if (data.labels.selected >= 0) {
+                        data.labels.label[data.labels.selected].center.x++;
                         update_image(&data);
                     }
                     break;
                 // Backspace: Delete selected label
                 case 8 :
-                    if (data.labels->selected >= 0) {
-                        delete_label(data.labels, &data.labels->selected);
+                    if (data.labels.selected >= 0) {
+                        delete_label(&data.labels);
                         update_image(&data);
                     }
                     break;
                 // r: Reset current image
                 case 'r':
-                    data.labels->count = 0;
-                    data.labels->selected = -1;
-                    data.labels->copied = -1;
+                    data.labels.count = 0;
+                    data.labels.selected = -1;
+                    data.labels.copied = -1;
                     update_image(&data);
                     /*cvShowImage(WINDOW_NAME, data.img);*/
                     break;
@@ -216,16 +227,16 @@ int main(int argc, char *argv[]) {
         }
         
         // Save labels to file
-        if (data.labels->count > 0) {
+        if (data.labels.count > 0) {
             if (mkdir(dest_dir, 0755) == 0)
                 printf("Created destination folder for labelled image: %s\n", dest_dir);
-            save_labels(tmpfile, dd->d_name, dest_dir, *data.labels, data.img);
+            save_labels(tmpfile, dd->d_name, data.labels);
         }
         cvReleaseImage(&data.img);
         
         // Reset label count
-        data.labels->count = 0;
-        data.labels->selected = -1;
+        data.labels.count = 0;
+        data.labels.selected = -1;
     }
     cvDestroyWindow(WINDOW_NAME);
     
@@ -258,5 +269,80 @@ int main(int argc, char *argv[]) {
     free(dest_dir);
 
     return 0;
+}
+
+// Mouse callback handler
+void on_mouse(int event, int x, int y, int i, void *param) {
+    labels_data* data = param;
+    switch (event) {
+        case CV_EVENT_LBUTTONDOWN:
+            if (!data->moving) {
+                if (data->labels.selected >= 0) {
+                    data->labels.label[data->labels.selected].selected = false;
+                    data->labels.selected = -1;
+                }
+                data->corner = cvPoint(x, y);
+                data->opposite_corner = cvPoint(x, y);
+                data->drawing = true;
+            }
+            break;
+        case CV_EVENT_LBUTTONUP:
+            data->drawing = false;
+            data->opposite_corner = cvPoint(x, y);
+            // Save new label
+            if (data->opposite_corner.x != data->corner.x && data->opposite_corner.y != data->corner.y) {
+                CvPoint center;
+                int width, height;
+                center = cvPoint((data->corner.x + data->opposite_corner.x)/2, (data->corner.y + data->opposite_corner.y)/2);
+                width = abs(center.x - data->corner.x);
+                height = abs(center.y - data->corner.y);
+                if (create_label(&data->labels, center, width, height)) {
+                    printf("Label %d -> ", data->labels.count - 1);
+                    print_label(data->labels.label[data->labels.count - 1]);
+                } else
+                    printf("Label not saved: Too many labels\n");
+            }
+            break;
+        case CV_EVENT_RBUTTONDOWN:
+            if (select_label(x, y, &data->labels)) {
+                printf("Selected label %d\n", data->labels.selected);
+            }
+            if (!data->drawing) {
+                data->moving = true;
+            }
+            break;
+        case CV_EVENT_RBUTTONUP:
+            data->moving = false;
+            break;
+        case CV_EVENT_MOUSEMOVE:
+            if (data->drawing)
+                data->opposite_corner = cvPoint(x, y);
+            else if (data->moving && data->labels.selected >= 0)
+                data->labels.label[data->labels.selected].center = cvPoint(x, y);
+            break;
+        default: break;
+    }
+    return;
+}
+
+// Refresh the image 'img' redrawing the lables in 'labels'
+void update_image(labels_data *data) {
+
+    CvScalar color = cvScalar(255, 0, 0, 0);
+    CvScalar color_selected = cvScalar(0, 0, 255, 0);
+
+    IplImage *tmp = cvCreateImage(cvSize(data->img->width, data->img->height), data->img->depth, data->img->nChannels);
+    cvCopy(data->img, tmp, NULL);
+
+    if (data->drawing && data->labels.count < MAX_LABELS)
+        draw_label(tmp, data->corner, data->opposite_corner, color, true);
+    for (int i = 0; i < data->labels.count; i++) {
+        CvPoint corner1 = cvPoint(data->labels.label[i].center.x + data->labels.label[i].width, data->labels.label[i].center.y + data->labels.label[i].height);
+        CvPoint corner2 = cvPoint(2 * data->labels.label[i].center.x - corner1.x, 2 * data->labels.label[i].center.y - corner1.y);
+        data->labels.label[i].selected ? draw_label(tmp, corner1, corner2, color_selected, true) : draw_label(tmp, corner1, corner2, color, false);
+    }
+    cvShowImage(WINDOW_NAME, tmp);
+    cvReleaseImage(&tmp);
+    return;
 }
 

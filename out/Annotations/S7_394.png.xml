@@ -1,0 +1,25 @@
+<annotation>
+				<folder>FRUTTA</folder>
+				<filename>S7_394.png.jpg</filename>
+				<source> 
+					<database>tesi UNIBO</database>
+				</source>
+				<size>
+					<width>300</width>
+					<height>300</height>
+					<depth>3</depth>
+				</size>
+				<segmented>0</segmented>
+	<object>
+		<name>A</name>
+		<pose>Unspecified</pose>
+		<truncated>0</truncated>
+		<difficult>0</difficult>
+		<bndbox>
+			<xmin>757</xmin>
+			<ymin>451</ymin>
+			<xmax>809</xmax>
+			<ymax>497</ymax>
+		</bndbox>
+	</object>
+</annotation>
