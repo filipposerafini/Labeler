@@ -75,9 +75,10 @@ bool open_next_image(data *data) {
         }
         else {
             if (!strcmp(p, ".jpg") || !strcmp(p, ".JPG") || !strcmp(p, ".png") || !strcmp(p, ".PNG")) {
-                data->name = (char*)realloc(data->name, strlen(dd->d_name) - 4);
+                data->name = (char*)realloc(data->name, strlen(dd->d_name) - 3);
                 strncpy(data->name, dd->d_name, strlen(dd->d_name) - 4);
-                src_img = (char*)malloc(strlen(dd->d_name) + strlen(data->selected_folder) + 1);
+                data->name[strlen(dd->d_name) - 4] = '\0';
+                src_img = (char*)malloc(strlen(dd->d_name) + strlen(data->selected_folder) + 2);
                 sprintf(src_img, "%s/%s", data->selected_folder, dd->d_name);
                 g_message("Opening file: %s\n", data->name);
                 break;
@@ -160,9 +161,9 @@ bool convert_coordinates(float pointer_x, float pointer_y, GtkWidget *widget, in
 void save(char *tmpfile, char *folder_name) {
     FILE *file;
     char *p = strrchr(folder_name, '/');
-    char *destfolder = (char*)malloc(sizeof(p) + 4);
-    sprintf(destfolder, "out/%s",++p);
-    char *outfile = (char*)malloc(strlen(destfolder) + sizeof(p) + 5);
+    char *destfolder = (char*)malloc(strlen(++p) + 5);
+    sprintf(destfolder, "out/%s",p);
+    char *outfile = (char*)malloc(strlen(destfolder) + strlen(p) + 5);
     sprintf(outfile, "%s/%s.csv", destfolder, p);
     if ((file = fopen(tmpfile, "r")) != NULL) {
         fclose(file);

@@ -56,12 +56,10 @@ void on_btn_open_clicked(GtkButton *button, gpointer user_data)
     }
 }
 
-
 void show_save_dialog(GtkMenuItem *menu_item, gpointer user_data) {
     data *data = user_data;
     FILE *file;
     g_debug("Showing save dialog\n");
-    save_labels(data->tmpfile, data->name, data->labels);
     if ((file = fopen(data->tmpfile, "r")) != NULL) {
         fclose(file);
         gtk_window_present(GTK_WINDOW(data->elements.save_dialog));
@@ -246,9 +244,7 @@ gboolean on_mouse_move_event(GtkWidget *image, GdkEvent *event, gpointer user_da
 
 void on_btn_next_clicked(GtkButton *button, gpointer user_data) {
     data *data = user_data;
-
     save_labels(data->tmpfile, data->name, data->labels);
-
     if (!open_next_image(data)) {
         g_warning("No more image in %s", data->selected_folder);
         gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_next), FALSE);
