@@ -6,13 +6,14 @@ void init_data(data *data, GtkBuilder *builder) {
     reset(&data->labels);
     data->drawing = false;
     data->moving = false;
+    data->control = false;
     data->img = NULL;
     data->tmp = NULL;
     data->selected_file = NULL;
     data->selected_folder = NULL;
     data->dir = NULL;
     data->name = NULL;
-    data->tmpfile = "tmpfile";
+    data->tmpfile = "out/tmpfile";
 }
 
 // Initialize all elements in 'elements'
@@ -32,7 +33,7 @@ void init_gui_elements(gui_elements *elements, GtkBuilder *builder) {
     elements->btn_open = GTK_BUTTON(gtk_builder_get_object(builder, "btn_open"));
     elements->save_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "save_dialog"));
 
-    gtk_widget_set_events(GTK_WIDGET(elements->event_box), GDK_POINTER_MOTION_MASK);
+    gtk_widget_add_events(GTK_WIDGET(elements->event_box), GDK_KEY_PRESS_MASK);
 }
 
 // Show 'img' in 'image', resizing it to fit in container 'widget' keeping original ratio.
@@ -74,10 +75,10 @@ bool open_next_image(data *data) {
         }
         else {
             if (!strcmp(p, ".jpg") || !strcmp(p, ".JPG") || !strcmp(p, ".png") || !strcmp(p, ".PNG")) {
-                data->name = (char*)realloc(data->name, strlen(dd->d_name));
-                strcpy(data->name, dd->d_name);
-                src_img = (char*)malloc(strlen(data->name) + strlen(data->selected_folder) + 1);
-                sprintf(src_img, "%s/%s", data->selected_folder, data->name);
+                data->name = (char*)realloc(data->name, strlen(dd->d_name) - 4);
+                strncpy(data->name, dd->d_name, strlen(dd->d_name) - 4);
+                src_img = (char*)malloc(strlen(dd->d_name) + strlen(data->selected_folder) + 1);
+                sprintf(src_img, "%s/%s", data->selected_folder, dd->d_name);
                 g_message("Opening file: %s\n", data->name);
                 break;
             }
@@ -154,20 +155,26 @@ bool convert_coordinates(float pointer_x, float pointer_y, GtkWidget *widget, in
         return true;
 }
 
+// Create a folder in out/ named 'folder_name' and place in it a .csv file
+// with all label imformations
 void save(char *tmpfile, char *folder_name) {
     FILE *file;
     char *p = strrchr(folder_name, '/');
-    char *outfile = (char*)malloc(strlen(p) + 4);
-    sprintf(outfile, "%s.csv", ++p);
-    printf("%s\n", outfile);
+    char *destfolder = (char*)malloc(sizeof(p) + 4);
+    sprintf(destfolder, "out/%s",++p);
+    char *outfile = (char*)malloc(strlen(destfolder) + sizeof(p) + 5);
+    sprintf(outfile, "%s/%s.csv", destfolder, p);
     if ((file = fopen(tmpfile, "r")) != NULL) {
         fclose(file);
+        if (mkdir(destfolder, 0755) == 0)
+            g_message("Created folder %s", destfolder);
         if (rename(tmpfile, outfile) != 0) {
             g_error("Error renaming the temporary file\n");
             exit(EXIT_FAILURE);
         } else
             g_message("%s saved correctly\n", outfile);
-        free(outfile);
     }
+    free(destfolder);
+    free(outfile);
 }
 

@@ -47,11 +47,15 @@ void on_btn_open_clicked(GtkButton *button, gpointer user_data)
         g_message("Opening first image in %s", data->selected_folder);
         if (!open_next_image(data)) {
             gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_next), FALSE);
+            gtk_widget_set_sensitive(GTK_WIDGET(data->elements.event_box), FALSE);
             g_warning("Selected directory has no image");
-        } else
+        } else {
             update_image(data);
+            gtk_widget_set_sensitive(GTK_WIDGET(data->elements.event_box), TRUE);
+        }
     }
 }
+
 
 void show_save_dialog(GtkMenuItem *menu_item, gpointer user_data) {
     data *data = user_data;
@@ -135,23 +139,49 @@ void on_mi_print_activate(GtkMenuItem *menu_item, gpointer user_data) {
     debug_print(data->labels);
 }
 
+gboolean on_key_press_event(GtkWidget *widget, GdkEvent *event, gpointer user_data) {
+    data *data = user_data;
+    if (event->key.keyval == GDK_KEY_Control_L) 
+        data->control = true;
+    if (data->control && event->key.keyval == GDK_KEY_c && gtk_widget_is_sensitive(GTK_WIDGET(data->elements.mi_copy)))
+        on_mi_copy_activate(data->elements.mi_copy, data);
+    if (data->control && event->key.keyval == GDK_KEY_v && gtk_widget_is_sensitive(GTK_WIDGET(data->elements.mi_paste)))
+        on_mi_paste_activate(data->elements.mi_paste, data);
+    if (event->key.keyval == GDK_KEY_BackSpace && gtk_widget_is_sensitive(GTK_WIDGET(data->elements.mi_delete)))
+        on_mi_delete_activate(data->elements.mi_delete, data);
+    if (data->control && event->key.keyval == GDK_KEY_r && gtk_widget_is_sensitive(GTK_WIDGET(data->elements.mi_reset)))
+        on_mi_reset_activate(data->elements.mi_reset, data);
+    if (event->key.keyval == GDK_KEY_n && gtk_widget_is_sensitive(GTK_WIDGET(data->elements.btn_next)))
+        on_btn_next_clicked(data->elements.btn_next, data);
+}
+
+gboolean on_key_release_event(GtkWidget *widget, GdkEvent *event, gpointer user_data) {
+    data *data = user_data;
+    data->control = false;
+}
+
 gboolean on_button_press_event(GtkWidget *image, GdkEvent *event, gpointer user_data) {
     data *data = user_data;
     int x, y;
     bool inside = convert_coordinates(event->button.x, event->button.y, data->elements.event_box, &x, &y, data->img, data->elements.image);
     if (event->button.button == 1) {
         g_debug("Left click triggered");
-        if (!data->moving && inside) {
+        if (!data->moving) {
             data->drawing = true;
             if (data->labels.selected >= 0) {
                 data->labels.label[data->labels.selected].selected = false;
                 data->labels.selected = -1;
             }
-            data->corner = cvPoint(x, y);
-            data->opposite_corner = cvPoint(x, y);
+            if (inside) {
+                data->corner = cvPoint(x, y);
+                data->opposite_corner = cvPoint(x, y);
+            } else {
+                data->corner = cvPoint(-1, -1); 
+                data->opposite_corner = cvPoint(-1, -1);
+            }
         }
     }
-    else if (event->button.button == 3) {
+    else if (event->button.button == 3 && inside) {
         g_debug("Right click triggered");
         if (select_label(x, y, &data->labels)) {
             data->moving = true;
@@ -172,7 +202,8 @@ gboolean on_button_release_event(GtkWidget *image, GdkEvent *event, gpointer use
     if (event->button.button == 1) {
         g_debug("Left release triggered");
         data->drawing = false;
-        data->opposite_corner = cvPoint(x, y);
+        if (data->corner.x >= 0 && data->corner.y >= 0 && inside)
+            data->opposite_corner = cvPoint(x, y);
         // Save new label
         if (data->opposite_corner.x != data->corner.x && data->opposite_corner.y != data->corner.y) {
             CvPoint center;
@@ -203,8 +234,9 @@ gboolean on_mouse_move_event(GtkWidget *image, GdkEvent *event, gpointer user_da
     data *data = user_data;
     int x, y;
     bool inside = convert_coordinates(event->button.x, event->button.y, data->elements.event_box, &x, &y, data->img, data->elements.image);
-    if (data->drawing && inside) {
-        data->opposite_corner = cvPoint(x, y);
+    if (data->drawing) {
+        if (data->corner.x >= 0 && data->corner.y >= 0 && inside)
+            data->opposite_corner = cvPoint(x, y);
         update_image(data);
     } else if (data->moving && inside) {
         data->labels.label[data->labels.selected].center = cvPoint(x, y);

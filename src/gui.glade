@@ -8,6 +8,8 @@
     <property name="default_width">1024</property>
     <property name="default_height">576</property>
     <signal name="destroy" handler="show_save_dialog" swapped="no"/>
+    <signal name="key-press-event" handler="on_key_press_event" swapped="no"/>
+    <signal name="key-release-event" handler="on_key_release_event" swapped="no"/>
     <signal name="size-allocate" handler="resize_image" swapped="no"/>
     <child>
       <object class="GtkBox">
@@ -158,6 +160,8 @@
             <property name="margin_bottom">5</property>
             <signal name="button-press-event" handler="on_button_press_event" swapped="no"/>
             <signal name="button-release-event" handler="on_button_release_event" swapped="no"/>
+            <signal name="key-press-event" handler="on_key_press_event" swapped="no"/>
+            <signal name="key-release-event" handler="on_key_release_event" swapped="no"/>
             <signal name="motion-notify-event" handler="on_mouse_move_event" swapped="no"/>
             <child>
               <object class="GtkImage" id="image">

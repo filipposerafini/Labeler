@@ -12,10 +12,10 @@ cd out/ImageSets/Main
 dividi elenco.txt trainval.txt testset.txt
 dividi trainval.txt train.txt val.txt
 dividi testset.txt test.txt altro.txt
-for l in A B C D ; do
-	dividi $l"_elenco.txt" $l"_trainval.txt" $l"_testset.txt"
-        dividi $l"_trainval.txt" $l"_train.txt" $l"_val.txt"
-	dividi $l"_testset.txt" $l"_test.txt" /dev/null
-done
+#for l in A B C D ; do
+	#dividi $l"_elenco.txt" $l"_trainval.txt" $l"_testset.txt"
+        #dividi $l"_trainval.txt" $l"_train.txt" $l"_val.txt"
+	#dividi $l"_testset.txt" $l"_test.txt" /dev/null
+#done
 
 

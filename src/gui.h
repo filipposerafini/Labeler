@@ -4,10 +4,12 @@
 #include "Label.h"
 #include <gtk/gtk.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
+#include <gdk/gdkkeysyms.h>
 #include <opencv/highgui.h>
 #include <dirent.h>
 #include <stdlib.h>
 #include <string.h>
+#include <sys/stat.h>
 #include <sys/types.h>
 
 typedef struct {
@@ -42,6 +44,7 @@ typedef struct {
     CvPoint opposite_corner;
     bool drawing;
     bool moving;
+    bool control;
     char *tmpfile;
     char *name;
 } data;
@@ -60,6 +63,8 @@ void on_mi_copy_activate(GtkMenuItem *menu_item, gpointer user_data);
 void on_mi_paste_activate(GtkMenuItem *menu_item, gpointer user_data);
 void on_mi_delete_activate(GtkMenuItem *menu_item, gpointer user_data);
 void on_mi_print_activate(GtkMenuItem *menu_item, gpointer user_data);
+gboolean on_key_press_event(GtkWidget *widget, GdkEvent *event, gpointer user_data);
+gboolean on_key_release_event(GtkWidget *widget, GdkEvent *event, gpointer user_data);
 gboolean on_button_press_event(GtkWidget *image, GdkEvent *event, gpointer user_data);
 gboolean on_button_press_event(GtkWidget *image, GdkEvent *event, gpointer user_data);
 gboolean on_mouse_move_event(GtkWidget *image, GdkEvent *event, gpointer user_data);

@@ -1,7 +1,8 @@
 #! /bin/bash
 CARTELLA="FRUTTA"
 DATABASE="tesi UNIBO"
-CLASSI=(A B C D)
+#CLASSI=(A B C D)
+NAME="LABEL"
 LARGHEZZA=300
 ALTEZZA=300
 
@@ -32,7 +33,8 @@ mkdir -p out/ImageSets/Main
 
 leggi_csv | (
 	IFS=';'
-	while read foto xc yc w2 h2 classe ; do
+	#while read foto xc yc w2 h2 classe ; do
+    while read foto xc yc w2 h2 ; do
 		
 		if [ ! -f "out/Annotations/$foto.xml" ] ; then
 			echo "<annotation>
@@ -50,8 +52,9 @@ leggi_csv | (
 			#echo $foto > out/ImageSets/Main/${a}_elenco.txt
 			echo $foto >> "out/ImageSets/Main/elenco.txt" 
 		fi
+		#<name>"${CLASSI[$classe]}"</name>
 		echo "	<object>
-		<name>"${CLASSI[$classe]}"</name>
+		<name>"$NAME"</name>
 		<pose>Unspecified</pose>
 		<truncated>0</truncated>
 		<difficult>0</difficult>
@@ -70,17 +73,17 @@ leggi_csv | (
 		echo "</annotation>" >> "$f"
 	done
 )
-for i in ${!CLASSI[@]} ; do
-	(
-		while read foto ; do
-			if leggi_csv | egrep "^$foto;" | egrep -q ";"$i"$" ; then
-				echo $foto 1
-			else
-				echo $foto -1
-			fi
-		done
-	) < out/ImageSets/Main/elenco.txt > out/ImageSets/Main/${CLASSI[$i]}_elenco.txt
-done
+#for i in ${!CLASSI[@]} ; do
+	#(
+		#while read foto ; do
+			#if leggi_csv | egrep "^$foto;" | egrep -q ";"$i"$" ; then
+				#echo $foto 1
+			#else
+				#echo $foto -1
+			#fi
+		#done
+	#) < out/ImageSets/Main/elenco.txt > out/ImageSets/Main/${CLASSI[$i]}_elenco.txt
+#done
 #ls -1 out/JPEGImages | cut -d . -f 1 | while read foto ; do
 #	leggi_csv | egrep -q "^$foto;" || echo $foto >> out/ImageSets/Main/test.txt
 #done
