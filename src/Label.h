@@ -1,6 +1,6 @@
 /**
  * @file Label.h
- * @brief Header File
+ * @brief Label managment header File
  * @author Filippo Serafini
  */
 
@@ -10,8 +10,8 @@
 #include <stdio.h>
 #include <opencv/cv.h>
 
-#define MAX_LABELS 64
-#define ALPHA 0.4
+#define MAX_LABELS 64   /**< Maximum number of allowed label per image */
+#define ALPHA 0.4       /**< Transparency value for label with filled background */
 
 /**
  * Define boolean type.
@@ -65,8 +65,8 @@ bool over_label(int x, int y, label label);
 
 /**
  * Select a label from a group of labels.
- * Check if a point of coordinates (x, y) is inside any label in labels
- * and eventually select it, saving the index in labels.selected.
+ * Check if a point of coordinates x and y is inside any label in labels
+ * and eventually select one, saving the index in 'selected' structure's field.
  * @param x x coordinate
  * @param y y coordinate
  * @param labels The group of labels to check
@@ -78,47 +78,80 @@ bool select_label(int x, int y, labels *labels);
  * Draw a label.
  * Draw a colored rectangle in an image with given corners.
  * If fill is true the label will have a transparent
- * background (ALPHA) of the same color of the border.
+ * background of the same color of the border.
  * @param img Destination image
  * @param corner1 Corner of the label
  * @param corner2 Opposite corner of the label
- * @param color Color of the label
+ * @param color Color of label borders
  * @param fill Fill option
  */
 void draw_label(IplImage *img, CvPoint corner1, CvPoint corner2, CvScalar color, bool fill);
 
 /**
- * Save a new label in the labels array with given arguments.
+ * Save a new label.
+ * Save in labels array a new label with given parameters,
+ * incrementing array's logical dimention.
  * @param labels
  * @param center Central coordinates of the new label
  * @param width Width of the new label
  * @param height Height of the new label
- * @return true in case of success, false when labels array is full
+ * @return true in case of success, false if maximum number of labels is reached
  */
-bool create_label(labels *labels, CvPoint center, int width, int height);
+bool create_label(labels *dest, CvPoint center, int width, int height);
 
 /**
- * Save a copy of currently copied label in the labels array.
+ * Paste copied label.
+ * Save a copy of currently copied label in labels array,
+ * incrementing array's logical dimention.
  * @param labels
- * @return true in case of success, false when labels array is full
+ * @return true in case of success, false if maximum number of labels is reached
  */
 bool paste_label(labels *labels);
 
 /**
- * Delete currently selected labels from the labels array.
+ * Delete selected label.
+ * Delete currently selected label from the labels array,
+ * decrementing array's logical dimention and re-initializing
+ * 'selected' structure's field to -1.
  * @param labels
+ * @return true if deleted label was also the copied one,
+ * in this case 'copied' structure's field is re-initialized,
+ * false otherwise
  */
 bool delete_label(labels *labels);
 
 /**
- * Reset struct labels parameters
+ * Reset labels.
+ * Re-initialize labels struct parameters,
+ * setting logical dimention to 0, copied and selected index to -1
  * @param labels
  */
 void reset(labels *labels);
 
-void load_labels(char *filename, char *imagename, labels *labels);
+/**
+ * Load labels from file.
+ * Read given file searching for given imagename labels,
+ * and save them to dest labels struct.
+ *
+ * @param filename file to read from
+ * @param imagename name of the image to load labels
+ * @param dest destination labels struct
+ */
+void load_labels(char *filename, char *imagename, labels *dest);
 
-void save_labels(char *filename, char *imagename, labels labels);
+/**
+ * Save labels to file.
+ * Write in given file the information about every label
+ * from source labels struct.
+ * The function write a row per label, including image name,
+ * center coordinates, width and height. 
+ * All the information are separated by semicolon.
+ *
+ * @param filename file to write in
+ * @param imagename name of image that labels belong to
+ * @param src source labels struct
+ */
+void save_labels(char *filename, char *imagename, labels src);
 
 #endif
 

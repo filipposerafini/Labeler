@@ -8,8 +8,6 @@
     <property name="default_width">1024</property>
     <property name="default_height">576</property>
     <signal name="destroy" handler="show_save_dialog" swapped="no"/>
-    <signal name="key-press-event" handler="on_key_press_event" swapped="no"/>
-    <signal name="key-release-event" handler="on_key_release_event" swapped="no"/>
     <signal name="size-allocate" handler="resize_image" swapped="no"/>
     <child>
       <object class="GtkBox">
@@ -37,6 +35,18 @@
                         <property name="label" translatable="yes">_Open</property>
                         <property name="use_underline">True</property>
                         <signal name="activate" handler="show_open_dialog" swapped="no"/>
+                        <accelerator key="o" signal="activate" modifiers="GDK_CONTROL_MASK"/>
+                      </object>
+                    </child>
+                    <child>
+                      <object class="GtkMenuItem" id="mi_save">
+                        <property name="visible">True</property>
+                        <property name="sensitive">False</property>
+                        <property name="can_focus">False</property>
+                        <property name="label" translatable="yes">_Save</property>
+                        <property name="use_underline">True</property>
+                        <signal name="activate" handler="on_mi_save_clicked" swapped="no"/>
+                        <accelerator key="s" signal="activate" modifiers="GDK_CONTROL_MASK"/>
                       </object>
                     </child>
                     <child>
@@ -52,6 +62,7 @@
                         <property name="label" translatable="yes">_Quit</property>
                         <property name="use_underline">True</property>
                         <signal name="activate" handler="show_save_dialog" swapped="no"/>
+                        <accelerator key="q" signal="activate" modifiers="GDK_CONTROL_MASK"/>
                       </object>
                     </child>
                   </object>
@@ -77,6 +88,7 @@
                         <property name="label" translatable="yes">_Copy</property>
                         <property name="use_underline">True</property>
                         <signal name="activate" handler="on_mi_copy_activate" swapped="no"/>
+                        <accelerator key="c" signal="activate" modifiers="GDK_CONTROL_MASK"/>
                       </object>
                     </child>
                     <child>
@@ -87,6 +99,7 @@
                         <property name="label" translatable="yes">_Paste</property>
                         <property name="use_underline">True</property>
                         <signal name="activate" handler="on_mi_paste_activate" swapped="no"/>
+                        <accelerator key="v" signal="activate" modifiers="GDK_CONTROL_MASK"/>
                       </object>
                     </child>
                     <child>
@@ -97,6 +110,7 @@
                         <property name="label" translatable="yes">_Delete</property>
                         <property name="use_underline">True</property>
                         <signal name="activate" handler="on_mi_delete_activate" swapped="no"/>
+                        <accelerator key="BackSpace" signal="activate" modifiers="GDK_CONTROL_MASK"/>
                       </object>
                     </child>
                     <child>
@@ -113,6 +127,7 @@
                         <property name="label" translatable="yes">_Reset</property>
                         <property name="use_underline">True</property>
                         <signal name="activate" handler="on_mi_reset_activate" swapped="no"/>
+                        <accelerator key="r" signal="activate" modifiers="GDK_CONTROL_MASK"/>
                       </object>
                     </child>
                   </object>
@@ -130,12 +145,13 @@
                     <property name="visible">True</property>
                     <property name="can_focus">False</property>
                     <child>
-                      <object class="GtkMenuItem" id="imi_print">
+                      <object class="GtkMenuItem" id="mi_print">
                         <property name="visible">True</property>
                         <property name="can_focus">False</property>
-                        <property name="label" translatable="yes">Print _Info</property>
+                        <property name="label" translatable="yes">_Info</property>
                         <property name="use_underline">True</property>
                         <signal name="activate" handler="on_mi_print_activate" swapped="no"/>
+                        <accelerator key="i" signal="activate" modifiers="GDK_CONTROL_MASK"/>
                       </object>
                     </child>
                   </object>
@@ -160,8 +176,6 @@
             <property name="margin_bottom">5</property>
             <signal name="button-press-event" handler="on_button_press_event" swapped="no"/>
             <signal name="button-release-event" handler="on_button_release_event" swapped="no"/>
-            <signal name="key-press-event" handler="on_key_press_event" swapped="no"/>
-            <signal name="key-release-event" handler="on_key_release_event" swapped="no"/>
             <signal name="motion-notify-event" handler="on_mouse_move_event" swapped="no"/>
             <child>
               <object class="GtkImage" id="image">
@@ -209,6 +223,7 @@
                 <property name="receives_default">True</property>
                 <property name="use_underline">True</property>
                 <signal name="clicked" handler="on_btn_next_clicked" swapped="no"/>
+                <accelerator key="n" signal="clicked" modifiers="GDK_CONTROL_MASK"/>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -242,7 +257,7 @@
     <property name="type_hint">dialog</property>
     <property name="deletable">False</property>
     <property name="gravity">center</property>
-    <signal name="destroy" handler="on_btn_cancel_clicked" swapped="no"/>
+    <signal name="delete-event" handler="on_btn_open_cancel_clicked" swapped="no"/>
     <child>
       <object class="GtkBox">
         <property name="visible">True</property>
@@ -292,6 +307,48 @@
           </packing>
         </child>
         <child>
+          <object class="GtkBox">
+            <property name="visible">True</property>
+            <property name="can_focus">False</property>
+            <property name="margin_left">5</property>
+            <property name="margin_right">5</property>
+            <property name="spacing">10</property>
+            <property name="homogeneous">True</property>
+            <child>
+              <object class="GtkLabel">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="label" translatable="yes">Load labels (optional):</property>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkFileChooserButton" id="file_chooser">
+                <property name="visible">True</property>
+                <property name="can_focus">False</property>
+                <property name="create_folders">False</property>
+                <property name="title" translatable="yes"/>
+                <signal name="file-set" handler="on_file_chooser_file_set" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">False</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
+              </packing>
+            </child>
+          </object>
+          <packing>
+            <property name="expand">False</property>
+            <property name="fill">True</property>
+            <property name="padding">5</property>
+            <property name="position">1</property>
+          </packing>
+        </child>
+        <child>
           <object class="GtkButtonBox">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
@@ -300,13 +357,13 @@
             <property name="spacing">10</property>
             <property name="layout_style">end</property>
             <child>
-              <object class="GtkButton" id="btn_cancel">
+              <object class="GtkButton" id="btn_open_cancel">
                 <property name="label">gtk-cancel</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="use_stock">True</property>
-                <signal name="clicked" handler="on_btn_cancel_clicked" swapped="no"/>
+                <signal name="clicked" handler="on_btn_open_cancel_clicked" swapped="no"/>
               </object>
               <packing>
                 <property name="expand">True</property>
@@ -336,48 +393,6 @@
             <property name="fill">True</property>
             <property name="padding">5</property>
             <property name="pack_type">end</property>
-            <property name="position">1</property>
-          </packing>
-        </child>
-        <child>
-          <object class="GtkBox">
-            <property name="visible">True</property>
-            <property name="can_focus">False</property>
-            <property name="margin_left">5</property>
-            <property name="margin_right">5</property>
-            <property name="spacing">10</property>
-            <property name="homogeneous">True</property>
-            <child>
-              <object class="GtkLabel">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Select file:</property>
-              </object>
-              <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
-                <property name="position">0</property>
-              </packing>
-            </child>
-            <child>
-              <object class="GtkFileChooserButton" id="file_chooser">
-                <property name="visible">True</property>
-                <property name="can_focus">False</property>
-                <property name="create_folders">False</property>
-                <property name="title" translatable="yes"/>
-                <signal name="file-set" handler="on_file_chooser_file_set" swapped="no"/>
-              </object>
-              <packing>
-                <property name="expand">False</property>
-                <property name="fill">True</property>
-                <property name="position">1</property>
-              </packing>
-            </child>
-          </object>
-          <packing>
-            <property name="expand">False</property>
-            <property name="fill">True</property>
-            <property name="padding">5</property>
             <property name="position">2</property>
           </packing>
         </child>
@@ -395,6 +410,7 @@
     <property name="default_height">100</property>
     <property name="type_hint">dialog</property>
     <property name="deletable">False</property>
+    <signal name="delete-event" handler="destroy" swapped="no"/>
     <signal name="destroy" handler="destroy" swapped="no"/>
     <child>
       <object class="GtkBox">
@@ -434,6 +450,7 @@
           <object class="GtkButtonBox">
             <property name="visible">True</property>
             <property name="can_focus">False</property>
+            <property name="homogeneous">True</property>
             <property name="layout_style">expand</property>
             <child>
               <object class="GtkButton">
@@ -448,6 +465,21 @@
                 <property name="expand">True</property>
                 <property name="fill">True</property>
                 <property name="position">0</property>
+              </packing>
+            </child>
+            <child>
+              <object class="GtkButton" id="btn_save_cancel">
+                <property name="label">gtk-cancel</property>
+                <property name="visible">True</property>
+                <property name="can_focus">True</property>
+                <property name="receives_default">True</property>
+                <property name="use_stock">True</property>
+                <signal name="clicked" handler="on_btn_save_cancel_clicked" swapped="no"/>
+              </object>
+              <packing>
+                <property name="expand">True</property>
+                <property name="fill">True</property>
+                <property name="position">1</property>
               </packing>
             </child>
             <child>

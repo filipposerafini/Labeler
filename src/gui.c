@@ -13,32 +13,32 @@ void init_data(data *data, GtkBuilder *builder) {
     data->selected_folder = NULL;
     data->dir = NULL;
     data->name = NULL;
-    data->tmpfile = "out/tmpfile";
 }
 
 // Initialize all elements in 'elements'
 void init_gui_elements(gui_elements *elements, GtkBuilder *builder) {
     elements->main_window = GTK_WIDGET(gtk_builder_get_object(builder, "main_window"));
-    elements->mi_reset = GTK_MENU_ITEM(gtk_builder_get_object(builder, "mi_reset"));
+    elements->open_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "open_dialog"));
+    elements->btn_cancel = GTK_BUTTON(gtk_builder_get_object(builder, "btn_cancel"));
+    elements->btn_open = GTK_BUTTON(gtk_builder_get_object(builder, "btn_open"));
+    elements->mi_open = GTK_MENU_ITEM(gtk_builder_get_object(builder, "mi_open"));
     elements->mi_edit = GTK_MENU_ITEM(gtk_builder_get_object(builder, "mi_edit"));
+    elements->mi_save = GTK_MENU_ITEM(gtk_builder_get_object(builder, "mi_save"));
     elements->mi_copy = GTK_MENU_ITEM(gtk_builder_get_object(builder, "mi_copy"));
     elements->mi_paste = GTK_MENU_ITEM(gtk_builder_get_object(builder, "mi_paste"));
     elements->mi_delete = GTK_MENU_ITEM(gtk_builder_get_object(builder, "mi_delete"));
+    elements->mi_reset = GTK_MENU_ITEM(gtk_builder_get_object(builder, "mi_reset"));
     elements->mi_print = GTK_MENU_ITEM(gtk_builder_get_object(builder, "mi_print"));
     elements->event_box = GTK_WIDGET(gtk_builder_get_object(builder, "event_box"));
     elements->image = GTK_IMAGE(gtk_builder_get_object(builder, "image"));
     elements->btn_next = GTK_BUTTON(gtk_builder_get_object(builder, "btn_next"));
-    elements->open_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "open_dialog"));
-    elements->btn_cancel = GTK_BUTTON(gtk_builder_get_object(builder, "btn_cancel"));
-    elements->btn_open = GTK_BUTTON(gtk_builder_get_object(builder, "btn_open"));
     elements->save_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "save_dialog"));
-
-    gtk_widget_add_events(GTK_WIDGET(elements->event_box), GDK_KEY_PRESS_MASK);
 }
 
 // Show 'img' in 'image', resizing it to fit in container 'widget' keeping original ratio.
 void show_image(IplImage *img, GtkImage *image, GtkWidget *widget) {
     float ratio;
+    // Create pixbuf from IplImage data
     GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data((guchar *)img->imageData,GDK_COLORSPACE_RGB,FALSE,img->depth,img->width,img->height,img->widthStep,NULL,NULL);
     int width = gdk_pixbuf_get_width(pixbuf);
     int height = gdk_pixbuf_get_height(pixbuf);
@@ -94,20 +94,25 @@ bool open_next_image(data *data) {
         // No valid image found
         return false;
     else {
+        // Release previous img allocation
         if (data->img != NULL)
             cvReleaseImage(&data->img);
-            
+        // Re-initialize labels informations
         reset(&data->labels);
-        // Load image
+        // Load new image
         data->img = cvLoadImage(src_img, CV_LOAD_IMAGE_COLOR);
         if (!data->img) {
             g_error("Failed to load image %s", src_img);
             exit(EXIT_FAILURE);
         }
+        // Release previous tmp allocation
+        if (data->tmp != NULL)
+            cvReleaseImage(&data->tmp);
         data->tmp = cvCreateImage(cvSize(data->img->width, data->img->height), data->img->depth, data->img->nChannels);
-        // Convert from OPENCV BGR to GTK RGB
+        // Convert from BGR (opencv) to RGB (gtk)
         cvCvtColor(data->img, data->img, CV_BGR2RGB);
         if (data->selected_file != NULL)
+            // Load labels from file
             load_labels(data->selected_file, data->name, &data->labels);
         free(src_img);
         return true;
@@ -133,6 +138,7 @@ void update_image(data *data) {
         else
             draw_label(data->tmp, corner1, corner2, color, false);
     }
+    // Show the updated image
     show_image(data->tmp, data->elements.image, data->elements.main_window);
 }
 
@@ -148,8 +154,11 @@ bool convert_coordinates(float pointer_x, float pointer_y, GtkWidget *widget, in
     float xrap = width / img->width;    
     float yrap = height / img->height;
 
+    // Calculate image relative coordinates
     *x = (pointer_x - (allocation.width - width)/2) / xrap;
     *y = (pointer_y - (allocation.height - height)/2) / yrap;
+    
+    // Check if point is inside the image
     if (*x < 0 || *x > img->width ||*y < 0 || *y > img->height)
         return false;
     else
@@ -167,8 +176,10 @@ void save(char *tmpfile, char *folder_name) {
     sprintf(outfile, "%s/%s.csv", destfolder, p);
     if ((file = fopen(tmpfile, "r")) != NULL) {
         fclose(file);
+        // Create destination folder
         if (mkdir(destfolder, 0755) == 0)
             g_message("Created folder %s", destfolder);
+        // Rename tempfile that becomes the outfile
         if (rename(tmpfile, outfile) != 0) {
             g_error("Error renaming the temporary file\n");
             exit(EXIT_FAILURE);

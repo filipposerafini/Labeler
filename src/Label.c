@@ -4,7 +4,6 @@
 // Center coordinates (x,y), width and height
 void print_label(label label) {
     printf("Center: %dx%d, width: %d, height: %d\n", label.center.x, label.center.y, label.width, label.height);
-    return;
 }
 
 // Print information for every element in 'labels', 
@@ -13,6 +12,7 @@ void debug_print(labels labels) {
     if (labels.count > 0) {
         printf("\n**********************************************************************\n");
         for (int i = 0; i < labels.count; i++) {
+    return;
             printf("Label %d -> ", i);
             if (labels.selected == i) printf("(selected) ");
             if (labels.copied == i) printf("(copied) ");
@@ -20,7 +20,6 @@ void debug_print(labels labels) {
         }
         printf("**********************************************************************\n\n");
     }
-    return;
 }
 
 // Check if a point of coorinates 'x', 'y' is the inside the label 'label'
@@ -91,13 +90,15 @@ bool paste_label(labels *labels) {
 bool delete_label(labels *labels) {
     for (int i = labels->selected; i < labels->count; i++)
         labels->label[i] = labels->label[i + 1];
-    labels->selected = -1;
     labels->count--;
     if (labels->selected == labels->copied) {
+        labels->selected = -1;
         labels->copied = -1;
         return true;
-    } else
+    } else {
+        labels->selected = -1;
         return false;
+    }
 }
 
 // Reset 'labels' parameters
@@ -108,8 +109,8 @@ void reset(labels *labels) {
 }
 
 // Load labels for image 'imagename' from file 'filename' 
-// and save them to 'labels'
-void load_labels(char *filename, char *imagename, labels *labels) {
+// and save them to 'dest'
+void load_labels(char *filename, char *imagename, labels *dest) {
     FILE *file;
     char name[64];
     int i = 0, x, y, h, w;
@@ -124,9 +125,9 @@ void load_labels(char *filename, char *imagename, labels *labels) {
     while (fscanf(file, "%[^;];%d;%d;%d;%d\n", name, &x, &y, &w, &h) != EOF) {
         if (!strcmp(name, imagename)) {
             // Save label for current image
-            if (create_label(labels, cvPoint(x,y), w, h)) {
-                printf("Label %d loaded from file -> ", labels->count - 1);
-                print_label(labels->label[labels->count - 1]);
+            if (create_label(dest, cvPoint(x,y), w, h)) {
+                printf("Label %d loaded from file -> ", dest->count - 1);
+                print_label(dest->label[dest->count - 1]);
             } else
                 printf("Label not loaded: too many labels\n");
         }
@@ -136,22 +137,22 @@ void load_labels(char *filename, char *imagename, labels *labels) {
     return;
 }
 
-// Save every element stored in 'labels' to file 'filename'
+// Save every element stored in 'src' to file 'filename'
 // (and save an image in 'label_dir' with the drawed labels)
 // FILE FORMAT: 'imagename';x;y;width;height
-void save_labels(char *filename, char *imagename, labels labels) {
+void save_labels(char *filename, char *imagename, labels src) {
     FILE *file;
 
     // Open file in append mode
-    if (labels.count > 0) {
+    if (src.count > 0) {
         if ((file = fopen(filename, "a")) == NULL) {
             printf("Error writing on file\n");
             exit(EXIT_FAILURE);
         }
 
-        // Write labels to file
-        for (int i = 0; i < labels.count; i++) {
-            fprintf(file, "%s;%d;%d;%d;%d\n", imagename, labels.label[i].center.x, labels.label[i].center.y, labels.label[i].width, labels.label[i].height);
+        // Write src to file
+        for (int i = 0; i < src.count; i++) {
+            fprintf(file, "%s;%d;%d;%d;%d\n", imagename, src.label[i].center.x, src.label[i].center.y, src.label[i].width, src.label[i].height);
         }
         fclose(file);
     }

@@ -1,0 +1,229 @@
+\hypertarget{gui_8h}{}\section{gui.\+h File Reference}
+\label{gui_8h}\index{gui.\+h@{gui.\+h}}
+
+
+User interface header file.  
+
+
+{\ttfamily \#include \char`\"{}Label.\+h\char`\"{}}\newline
+{\ttfamily \#include $<$gtk/gtk.\+h$>$}\newline
+{\ttfamily \#include $<$gdk-\/pixbuf/gdk-\/pixbuf.\+h$>$}\newline
+{\ttfamily \#include $<$gdk/gdkkeysyms.\+h$>$}\newline
+{\ttfamily \#include $<$opencv/highgui.\+h$>$}\newline
+{\ttfamily \#include $<$dirent.\+h$>$}\newline
+{\ttfamily \#include $<$stdlib.\+h$>$}\newline
+{\ttfamily \#include $<$string.\+h$>$}\newline
+{\ttfamily \#include $<$sys/stat.\+h$>$}\newline
+{\ttfamily \#include $<$sys/types.\+h$>$}\newline
+\subsection*{Data Structures}
+\begin{DoxyCompactItemize}
+\item 
+struct \hyperlink{structgui__elements}{gui\+\_\+elements}
+\begin{DoxyCompactList}\small\item\em Stuct that contains all gui elements. \end{DoxyCompactList}\item 
+struct \hyperlink{structdata}{data}
+\begin{DoxyCompactList}\small\item\em Struct that contains all data used by the program. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Macros}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{gui_8h_ad104eeb595d8598064f26b2c592e304e}\label{gui_8h_ad104eeb595d8598064f26b2c592e304e}} 
+\#define {\bfseries T\+M\+P\+F\+I\+LE}~\char`\"{}out/.tmpfile\char`\"{}
+\end{DoxyCompactItemize}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+\mbox{\Hypertarget{gui_8h_af7a0dbac14c0f252cb46cfde4ad3264b}\label{gui_8h_af7a0dbac14c0f252cb46cfde4ad3264b}} 
+void {\bfseries init\+\_\+data} (\hyperlink{structdata}{data} $\ast$\hyperlink{structdata}{data}, Gtk\+Builder $\ast$builder)
+\item 
+\mbox{\Hypertarget{gui_8h_af0a4d974dd575dfdb3de0bf5afa749a9}\label{gui_8h_af0a4d974dd575dfdb3de0bf5afa749a9}} 
+void {\bfseries init\+\_\+gui\+\_\+elements} (\hyperlink{structgui__elements}{gui\+\_\+elements} $\ast$elements, Gtk\+Builder $\ast$builder)
+\item 
+void \hyperlink{gui_8h_aa58fa8201117309e41c6409b87e1aee9}{show\+\_\+image} (Ipl\+Image $\ast$img, Gtk\+Image $\ast$image, Gtk\+Widget $\ast$widget)
+\begin{DoxyCompactList}\small\item\em Show image in the image container. \end{DoxyCompactList}\item 
+\hyperlink{Label_8h_af6a258d8f3ee5206d682d799316314b1}{bool} \hyperlink{gui_8h_aa1eb7a3336e4f8ef252c5bade247c1eb}{open\+\_\+next\+\_\+image} (\hyperlink{structdata}{data} $\ast$\hyperlink{structdata}{data})
+\begin{DoxyCompactList}\small\item\em Open next image in selected directory. \end{DoxyCompactList}\item 
+void \hyperlink{gui_8h_adf5e4cf4fa280cb4b363aead3109022c}{update\+\_\+image} (\hyperlink{structdata}{data} $\ast$\hyperlink{structdata}{data})
+\begin{DoxyCompactList}\small\item\em Update image content. \end{DoxyCompactList}\item 
+\hyperlink{Label_8h_af6a258d8f3ee5206d682d799316314b1}{bool} \hyperlink{gui_8h_aa46dd4b95965aeebed8cd4e74563cfb1}{convert\+\_\+coordinates} (float pointer\+\_\+x, float pointer\+\_\+y, Gtk\+Widget $\ast$widget, int $\ast$x, int $\ast$y, Ipl\+Image $\ast$img, Gtk\+Image $\ast$image)
+\begin{DoxyCompactList}\small\item\em Convert coordinates. \end{DoxyCompactList}\item 
+void \hyperlink{gui_8h_a8849c609b9d45b2e64845a99d595d8d5}{save} (char $\ast$tmpfile, char $\ast$folder\+\_\+name)
+\begin{DoxyCompactList}\small\item\em Save labels to file. \end{DoxyCompactList}\item 
+\mbox{\Hypertarget{gui_8h_a46f39d9759505d2c9c76a977e8e75584}\label{gui_8h_a46f39d9759505d2c9c76a977e8e75584}} 
+void {\bfseries resize\+\_\+image} (Gtk\+Widget $\ast$widget, Gdk\+Rectangle $\ast$rectangle, gpointer user\+\_\+data)
+\item 
+\mbox{\Hypertarget{gui_8h_ac8670f821f134139f15e43ab8683a788}\label{gui_8h_ac8670f821f134139f15e43ab8683a788}} 
+void {\bfseries show\+\_\+open\+\_\+dialog} (Gtk\+Menu\+Item $\ast$image\+\_\+menu\+\_\+item, gpointer user\+\_\+data)
+\item 
+\mbox{\Hypertarget{gui_8h_a1894f73bcecd3b029980373eb47ed06e}\label{gui_8h_a1894f73bcecd3b029980373eb47ed06e}} 
+void {\bfseries on\+\_\+folder\+\_\+chooser\+\_\+file\+\_\+set} (Gtk\+File\+Chooser $\ast$file\+\_\+chooser, gpointer user\+\_\+data)
+\item 
+\mbox{\Hypertarget{gui_8h_aaaaecae8dd34f715382bee5a5b8d849f}\label{gui_8h_aaaaecae8dd34f715382bee5a5b8d849f}} 
+void {\bfseries on\+\_\+file\+\_\+chooser\+\_\+file\+\_\+set} (Gtk\+File\+Chooser $\ast$file\+\_\+chooser, gpointer user\+\_\+data)
+\item 
+\mbox{\Hypertarget{gui_8h_a28525f3f34572a6b971f1207e28c54f7}\label{gui_8h_a28525f3f34572a6b971f1207e28c54f7}} 
+void {\bfseries on\+\_\+btn\+\_\+open\+\_\+cancel\+\_\+clicked} (Gtk\+Button $\ast$button, gpointer user\+\_\+data)
+\item 
+\mbox{\Hypertarget{gui_8h_a2fbfcbd868597cb7b580d793eaabc4ce}\label{gui_8h_a2fbfcbd868597cb7b580d793eaabc4ce}} 
+void {\bfseries on\+\_\+btn\+\_\+open\+\_\+clicked} (Gtk\+Button $\ast$button, gpointer user\+\_\+data)
+\item 
+\mbox{\Hypertarget{gui_8h_a19e5c12a6727d3d92dc8bab5aafad768}\label{gui_8h_a19e5c12a6727d3d92dc8bab5aafad768}} 
+void {\bfseries on\+\_\+mi\+\_\+copy\+\_\+activate} (Gtk\+Menu\+Item $\ast$menu\+\_\+item, gpointer user\+\_\+data)
+\item 
+\mbox{\Hypertarget{gui_8h_a8554b0f239a32caa99682229eef1cfcd}\label{gui_8h_a8554b0f239a32caa99682229eef1cfcd}} 
+void {\bfseries on\+\_\+mi\+\_\+paste\+\_\+activate} (Gtk\+Menu\+Item $\ast$menu\+\_\+item, gpointer user\+\_\+data)
+\item 
+\mbox{\Hypertarget{gui_8h_a6ee90586e50fb9970d4ff0fd4a837ac1}\label{gui_8h_a6ee90586e50fb9970d4ff0fd4a837ac1}} 
+void {\bfseries on\+\_\+mi\+\_\+delete\+\_\+activate} (Gtk\+Menu\+Item $\ast$menu\+\_\+item, gpointer user\+\_\+data)
+\item 
+\mbox{\Hypertarget{gui_8h_ac47e165ca270dd187f9e9375f1511341}\label{gui_8h_ac47e165ca270dd187f9e9375f1511341}} 
+void {\bfseries on\+\_\+mi\+\_\+reset\+\_\+activate} (Gtk\+Menu\+Item $\ast$menu\+\_\+item, gpointer user\+\_\+data)
+\item 
+\mbox{\Hypertarget{gui_8h_a1bf2f0a91b2fd37167ca0b7be04be9e3}\label{gui_8h_a1bf2f0a91b2fd37167ca0b7be04be9e3}} 
+void {\bfseries on\+\_\+mi\+\_\+print\+\_\+activate} (Gtk\+Menu\+Item $\ast$menu\+\_\+item, gpointer user\+\_\+data)
+\item 
+\mbox{\Hypertarget{gui_8h_a78da2c767f5c9039724d9044d0677663}\label{gui_8h_a78da2c767f5c9039724d9044d0677663}} 
+gboolean {\bfseries on\+\_\+key\+\_\+press\+\_\+event} (Gtk\+Widget $\ast$widget, Gdk\+Event $\ast$event, gpointer user\+\_\+data)
+\item 
+\mbox{\Hypertarget{gui_8h_ae9a85bba11e9ce8ef5cc2a581d968485}\label{gui_8h_ae9a85bba11e9ce8ef5cc2a581d968485}} 
+gboolean {\bfseries on\+\_\+key\+\_\+release\+\_\+event} (Gtk\+Widget $\ast$widget, Gdk\+Event $\ast$event, gpointer user\+\_\+data)
+\item 
+\mbox{\Hypertarget{gui_8h_a0846e9e13a343f9da92d239ca08769c1}\label{gui_8h_a0846e9e13a343f9da92d239ca08769c1}} 
+gboolean {\bfseries on\+\_\+button\+\_\+press\+\_\+event} (Gtk\+Widget $\ast$image, Gdk\+Event $\ast$event, gpointer user\+\_\+data)
+\item 
+\mbox{\Hypertarget{gui_8h_a9fd8e3e845859033567e81bc58fa342f}\label{gui_8h_a9fd8e3e845859033567e81bc58fa342f}} 
+gboolean {\bfseries on\+\_\+mouse\+\_\+move\+\_\+event} (Gtk\+Widget $\ast$image, Gdk\+Event $\ast$event, gpointer user\+\_\+data)
+\item 
+\mbox{\Hypertarget{gui_8h_ae7356c7d42eb3eebef339d5ffbb82fec}\label{gui_8h_ae7356c7d42eb3eebef339d5ffbb82fec}} 
+void {\bfseries on\+\_\+btn\+\_\+next\+\_\+clicked} (Gtk\+Button $\ast$button, gpointer user\+\_\+data)
+\item 
+\mbox{\Hypertarget{gui_8h_ab10256fa4e0da3e5bebdc834c7ded1da}\label{gui_8h_ab10256fa4e0da3e5bebdc834c7ded1da}} 
+void {\bfseries show\+\_\+save\+\_\+dialog} (Gtk\+Menu\+Item $\ast$menu\+\_\+item, gpointer user\+\_\+data)
+\item 
+\mbox{\Hypertarget{gui_8h_ab1d76995b788cc5bb9c5cf14bfd479ee}\label{gui_8h_ab1d76995b788cc5bb9c5cf14bfd479ee}} 
+void {\bfseries on\+\_\+btn\+\_\+save\+\_\+cancel\+\_\+clicked} (Gtk\+Button $\ast$button, gpointer user\+\_\+data)
+\item 
+\mbox{\Hypertarget{gui_8h_a5c1b8b0a56afb9a3bc886272a0c70aca}\label{gui_8h_a5c1b8b0a56afb9a3bc886272a0c70aca}} 
+void {\bfseries on\+\_\+btn\+\_\+save\+\_\+clicked} (Gtk\+Button $\ast$button, gpointer user\+\_\+data)
+\item 
+\mbox{\Hypertarget{gui_8h_a7383901bef6ff5c8c66d8cf58e8ce948}\label{gui_8h_a7383901bef6ff5c8c66d8cf58e8ce948}} 
+void {\bfseries destroy} (Gtk\+Window $\ast$window, gpointer pointer)
+\end{DoxyCompactItemize}
+
+
+\subsection{Detailed Description}
+User interface header file. 
+
+\begin{DoxyAuthor}{Author}
+Filippo Serafini 
+\end{DoxyAuthor}
+
+
+\subsection{Function Documentation}
+\mbox{\Hypertarget{gui_8h_aa46dd4b95965aeebed8cd4e74563cfb1}\label{gui_8h_aa46dd4b95965aeebed8cd4e74563cfb1}} 
+\index{gui.\+h@{gui.\+h}!convert\+\_\+coordinates@{convert\+\_\+coordinates}}
+\index{convert\+\_\+coordinates@{convert\+\_\+coordinates}!gui.\+h@{gui.\+h}}
+\subsubsection{\texorpdfstring{convert\+\_\+coordinates()}{convert\_coordinates()}}
+{\footnotesize\ttfamily \hyperlink{Label_8h_af6a258d8f3ee5206d682d799316314b1}{bool} convert\+\_\+coordinates (\begin{DoxyParamCaption}\item[{float}]{pointer\+\_\+x,  }\item[{float}]{pointer\+\_\+y,  }\item[{Gtk\+Widget $\ast$}]{widget,  }\item[{int $\ast$}]{x,  }\item[{int $\ast$}]{y,  }\item[{Ipl\+Image $\ast$}]{img,  }\item[{Gtk\+Image $\ast$}]{image }\end{DoxyParamCaption})}
+
+
+
+Convert coordinates. 
+
+Convert from container relative coordinates to image relative coordinates.
+
+
+\begin{DoxyParams}{Parameters}
+{\em pointer\+\_\+x} & Container relative x coordinate \\
+\hline
+{\em pointer\+\_\+y} & Container relative y coordinate \\
+\hline
+{\em widget} & Event box \\
+\hline
+{\em x} & Image relative x coordinate \\
+\hline
+{\em y} & Image relative y coordinate \\
+\hline
+{\em img} & Current image \\
+\hline
+{\em image} & Image container\\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true if given point is inside the image, false otherwise 
+\end{DoxyReturn}
+\mbox{\Hypertarget{gui_8h_aa1eb7a3336e4f8ef252c5bade247c1eb}\label{gui_8h_aa1eb7a3336e4f8ef252c5bade247c1eb}} 
+\index{gui.\+h@{gui.\+h}!open\+\_\+next\+\_\+image@{open\+\_\+next\+\_\+image}}
+\index{open\+\_\+next\+\_\+image@{open\+\_\+next\+\_\+image}!gui.\+h@{gui.\+h}}
+\subsubsection{\texorpdfstring{open\+\_\+next\+\_\+image()}{open\_next\_image()}}
+{\footnotesize\ttfamily \hyperlink{Label_8h_af6a258d8f3ee5206d682d799316314b1}{bool} open\+\_\+next\+\_\+image (\begin{DoxyParamCaption}\item[{\hyperlink{structdata}{data} $\ast$}]{data }\end{DoxyParamCaption})}
+
+
+
+Open next image in selected directory. 
+
+Search for the next valid image in selected directory accepting only .jpg/.png files, and show it calling \hyperlink{gui_8h_aa58fa8201117309e41c6409b87e1aee9}{show\+\_\+image()}.
+
+
+\begin{DoxyParams}{Parameters}
+{\em data} & \\
+\hline
+\end{DoxyParams}
+\begin{DoxyReturn}{Returns}
+true on success, false if there isn\textquotesingle{}t any other valid image in current directory 
+\end{DoxyReturn}
+\mbox{\Hypertarget{gui_8h_a8849c609b9d45b2e64845a99d595d8d5}\label{gui_8h_a8849c609b9d45b2e64845a99d595d8d5}} 
+\index{gui.\+h@{gui.\+h}!save@{save}}
+\index{save@{save}!gui.\+h@{gui.\+h}}
+\subsubsection{\texorpdfstring{save()}{save()}}
+{\footnotesize\ttfamily void save (\begin{DoxyParamCaption}\item[{char $\ast$}]{tmpfile,  }\item[{char $\ast$}]{folder\+\_\+name }\end{DoxyParamCaption})}
+
+
+
+Save labels to file. 
+
+If exists, rename the temporary file used to store labels information to .csv output file, placing it in out/ in a folder named as give folder\+\_\+name
+
+
+\begin{DoxyParams}{Parameters}
+{\em tmpfile} & Temporary file name \\
+\hline
+{\em folder\+\_\+name} & Selected folder \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{gui_8h_aa58fa8201117309e41c6409b87e1aee9}\label{gui_8h_aa58fa8201117309e41c6409b87e1aee9}} 
+\index{gui.\+h@{gui.\+h}!show\+\_\+image@{show\+\_\+image}}
+\index{show\+\_\+image@{show\+\_\+image}!gui.\+h@{gui.\+h}}
+\subsubsection{\texorpdfstring{show\+\_\+image()}{show\_image()}}
+{\footnotesize\ttfamily void show\+\_\+image (\begin{DoxyParamCaption}\item[{Ipl\+Image $\ast$}]{img,  }\item[{Gtk\+Image $\ast$}]{image,  }\item[{Gtk\+Widget $\ast$}]{widget }\end{DoxyParamCaption})}
+
+
+
+Show image in the image container. 
+
+Show given Ipl\+Image image in Gtk\+Image container, resizing to fit in widget dimention keeping original ratio.
+
+
+\begin{DoxyParams}{Parameters}
+{\em img} & Image to show \\
+\hline
+{\em image} & Image container \\
+\hline
+{\em widget} & Window \\
+\hline
+\end{DoxyParams}
+\mbox{\Hypertarget{gui_8h_adf5e4cf4fa280cb4b363aead3109022c}\label{gui_8h_adf5e4cf4fa280cb4b363aead3109022c}} 
+\index{gui.\+h@{gui.\+h}!update\+\_\+image@{update\+\_\+image}}
+\index{update\+\_\+image@{update\+\_\+image}!gui.\+h@{gui.\+h}}
+\subsubsection{\texorpdfstring{update\+\_\+image()}{update\_image()}}
+{\footnotesize\ttfamily void update\+\_\+image (\begin{DoxyParamCaption}\item[{\hyperlink{structdata}{data} $\ast$}]{data }\end{DoxyParamCaption})}
+
+
+
+Update image content. 
+
+Refresh the image redrawing all the labels, and show it calling \hyperlink{gui_8h_aa58fa8201117309e41c6409b87e1aee9}{show\+\_\+image()}.
+
+
+\begin{DoxyParams}{Parameters}
+{\em data} & \\
+\hline
+\end{DoxyParams}

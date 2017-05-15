@@ -1,5 +1,12 @@
 #include "gui.h"
 
+void resize_image(GtkWidget *widget, GdkRectangle *rectangle, gpointer user_data) {
+    data *data = user_data;
+    if (data->img != NULL) {
+        update_image(data);
+    }
+}
+
 void show_open_dialog(GtkMenuItem *menu_item, gpointer user_data) {
     data *data = user_data;
     g_debug("Showing open dialog\n");
@@ -9,7 +16,9 @@ void show_open_dialog(GtkMenuItem *menu_item, gpointer user_data) {
 void on_folder_chooser_file_set(GtkFileChooser *folder_chooser, gpointer user_data) {
     data *data = user_data;
     DIR *dir;
+    // Read folder name
     if ((data->selected_folder = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(folder_chooser))) != NULL) {
+        // Try to open folder
         if ((dir = opendir(data->selected_folder)) == NULL) {
             gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_open), FALSE);
             g_critical("Failed to open %s. Please select another folder", data->selected_folder);
@@ -21,56 +30,12 @@ void on_folder_chooser_file_set(GtkFileChooser *folder_chooser, gpointer user_da
     }
 }
 
-void on_btn_cancel_clicked(GtkButton *button, gpointer user_data) {
-    gui_elements *elements = user_data;
-    g_debug("Hiding open dialog");
-    gtk_widget_hide(elements->open_dialog);
-}
-
-void on_btn_open_clicked(GtkButton *button, gpointer user_data)
-{
-    data *data = user_data;
-    if (data->dir != NULL) 
-        closedir(data->dir);
-    
-    if ((data->dir = opendir(data->selected_folder)) == NULL) {
-        gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_open), FALSE);
-        gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_next), FALSE);
-        g_critical("Failed to open %s. Please select another folder", data->selected_folder);
-    } else {
-        save(data->tmpfile, data->selected_folder);
-        reset(&data->labels);
-        gtk_widget_hide(data->elements.open_dialog);
-        gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_next), TRUE);
-        gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_edit), TRUE); 
-        gtk_widget_set_sensitive(GTK_WIDGET(data->elements.event_box), TRUE);
-        g_message("Opening first image in %s", data->selected_folder);
-        if (!open_next_image(data)) {
-            gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_next), FALSE);
-            gtk_widget_set_sensitive(GTK_WIDGET(data->elements.event_box), FALSE);
-            g_warning("Selected directory has no image");
-        } else {
-            update_image(data);
-            gtk_widget_set_sensitive(GTK_WIDGET(data->elements.event_box), TRUE);
-        }
-    }
-}
-
-void show_save_dialog(GtkMenuItem *menu_item, gpointer user_data) {
-    data *data = user_data;
-    FILE *file;
-    g_debug("Showing save dialog\n");
-    if ((file = fopen(data->tmpfile, "r")) != NULL) {
-        fclose(file);
-        gtk_window_present(GTK_WINDOW(data->elements.save_dialog));
-    } else
-        destroy(GTK_WINDOW(data->elements.main_window), data);
-}
-
 void on_file_chooser_file_set(GtkFileChooser *file_chooser, gpointer user_data) {
     data *data = user_data;
     char *p;
+    // Read file name
     if ((data->selected_file = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(file_chooser))) != NULL) {
+        // Check file extension
         if ((p = strrchr(data->selected_file, '.')) != NULL) {
             if (strcmp(p, ".csv")) {
                 g_warning("File format incompatible. Select .csv file");
@@ -86,22 +51,39 @@ void on_file_chooser_file_set(GtkFileChooser *file_chooser, gpointer user_data) 
     }
 }
 
-
-void on_btn_save_clicked(GtkButton *button, gpointer user_data) {
-    data *data = user_data;
-    save(data->tmpfile, data->selected_folder);
-    destroy(GTK_WINDOW(data->elements.main_window), data);
+void on_btn_open_cancel_clicked(GtkButton *button, gpointer user_data) {
+    gui_elements *elements = user_data;
+    g_debug("Hiding open dialog");
+    gtk_widget_hide(elements->open_dialog);
 }
 
-void on_mi_reset_activate(GtkMenuItem *menu_item, gpointer user_data) {
+void on_btn_open_clicked(GtkButton *button, gpointer user_data) {
     data *data = user_data;
-    reset(&data->labels);
-    update_image(data);
-    gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_copy), FALSE);
-    gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_paste), FALSE);
-    gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_delete), FALSE);
-    gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_reset), FALSE);
-    g_message("Image cleared");
+    // Close previous dir
+    closedir(data->dir);
+    
+    // Try to open selected directory
+    if ((data->dir = opendir(data->selected_folder)) == NULL) {
+        gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_open), FALSE);
+        gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_next), FALSE);
+        g_critical("Failed to open %s. Please select another folder", data->selected_folder);
+    } else {
+        // Initialize labels
+        reset(&data->labels);
+        // Hide open dialog
+        gtk_widget_hide(data->elements.open_dialog);
+        g_message("Opening first image in %s", data->selected_folder);
+        if (!open_next_image(data))
+            g_warning("Selected directory has no image");
+        else {
+            update_image(data);
+            gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_open), FALSE);
+            gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_save), TRUE);
+            gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_edit), TRUE); 
+            gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_next), TRUE);
+            gtk_widget_set_sensitive(GTK_WIDGET(data->elements.event_box), TRUE);
+        }
+    }
 }
 
 void on_mi_copy_activate(GtkMenuItem *menu_item, gpointer user_data) {
@@ -132,44 +114,37 @@ void on_mi_delete_activate(GtkMenuItem *menu_item, gpointer user_data) {
     g_message("Deleted selected label");
 }
 
+void on_mi_reset_activate(GtkMenuItem *menu_item, gpointer user_data) {
+    data *data = user_data;
+    reset(&data->labels);
+    update_image(data);
+    gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_copy), FALSE);
+    gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_paste), FALSE);
+    gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_delete), FALSE);
+    gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_reset), FALSE);
+    g_message("Image cleared");
+}
+
 void on_mi_print_activate(GtkMenuItem *menu_item, gpointer user_data) {
     data *data = user_data;
     debug_print(data->labels);
-}
-
-gboolean on_key_press_event(GtkWidget *widget, GdkEvent *event, gpointer user_data) {
-    data *data = user_data;
-    if (event->key.keyval == GDK_KEY_Control_L) 
-        data->control = true;
-    if (data->control && event->key.keyval == GDK_KEY_c && gtk_widget_is_sensitive(GTK_WIDGET(data->elements.mi_copy)))
-        on_mi_copy_activate(data->elements.mi_copy, data);
-    if (data->control && event->key.keyval == GDK_KEY_v && gtk_widget_is_sensitive(GTK_WIDGET(data->elements.mi_paste)))
-        on_mi_paste_activate(data->elements.mi_paste, data);
-    if (event->key.keyval == GDK_KEY_BackSpace && gtk_widget_is_sensitive(GTK_WIDGET(data->elements.mi_delete)))
-        on_mi_delete_activate(data->elements.mi_delete, data);
-    if (data->control && event->key.keyval == GDK_KEY_r && gtk_widget_is_sensitive(GTK_WIDGET(data->elements.mi_reset)))
-        on_mi_reset_activate(data->elements.mi_reset, data);
-    if (event->key.keyval == GDK_KEY_n && gtk_widget_is_sensitive(GTK_WIDGET(data->elements.btn_next)))
-        on_btn_next_clicked(data->elements.btn_next, data);
-}
-
-gboolean on_key_release_event(GtkWidget *widget, GdkEvent *event, gpointer user_data) {
-    data *data = user_data;
-    data->control = false;
 }
 
 gboolean on_button_press_event(GtkWidget *image, GdkEvent *event, gpointer user_data) {
     data *data = user_data;
     int x, y;
     bool inside = convert_coordinates(event->button.x, event->button.y, data->elements.event_box, &x, &y, data->img, data->elements.image);
+    // Left mouse button
     if (event->button.button == 1) {
         g_debug("Left click triggered");
         if (!data->moving) {
             data->drawing = true;
+            // Deselect selected label
             if (data->labels.selected >= 0) {
                 data->labels.label[data->labels.selected].selected = false;
                 data->labels.selected = -1;
             }
+            // Start drawing
             if (inside) {
                 data->corner = cvPoint(x, y);
                 data->opposite_corner = cvPoint(x, y);
@@ -179,8 +154,10 @@ gboolean on_button_press_event(GtkWidget *image, GdkEvent *event, gpointer user_
             }
         }
     }
+    // Right mouse button
     else if (event->button.button == 3 && inside) {
         g_debug("Right click triggered");
+        // Select label
         if (select_label(x, y, &data->labels)) {
             data->moving = true;
             g_message("Selected label %d\n", data->labels.selected);
@@ -197,6 +174,7 @@ gboolean on_button_release_event(GtkWidget *image, GdkEvent *event, gpointer use
     data *data = user_data;
     int x, y;
     bool inside = convert_coordinates(event->button.x, event->button.y, data->elements.event_box, &x, &y, data->img, data->elements.image);
+    // Left mouse button
     if (event->button.button == 1) {
         g_debug("Left release triggered");
         data->drawing = false;
@@ -221,6 +199,7 @@ gboolean on_button_release_event(GtkWidget *image, GdkEvent *event, gpointer use
                 gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_reset), TRUE);
         }
     }
+    // Right mouse button
     else if (event->button.button == 3) {
         g_debug("Right release triggered");
         data->moving = false;
@@ -233,10 +212,12 @@ gboolean on_mouse_move_event(GtkWidget *image, GdkEvent *event, gpointer user_da
     int x, y;
     bool inside = convert_coordinates(event->button.x, event->button.y, data->elements.event_box, &x, &y, data->img, data->elements.image);
     if (data->drawing) {
+        // Update opposite corner coordinates
         if (data->corner.x >= 0 && data->corner.y >= 0 && inside)
             data->opposite_corner = cvPoint(x, y);
         update_image(data);
     } else if (data->moving && inside) {
+        // Update center coordinates
         data->labels.label[data->labels.selected].center = cvPoint(x, y);
         update_image(data);
     }
@@ -244,7 +225,8 @@ gboolean on_mouse_move_event(GtkWidget *image, GdkEvent *event, gpointer user_da
 
 void on_btn_next_clicked(GtkButton *button, gpointer user_data) {
     data *data = user_data;
-    save_labels(data->tmpfile, data->name, data->labels);
+    save_labels(TMPFILE, data->name, data->labels);
+    // Open next image
     if (!open_next_image(data)) {
         g_warning("No more image in %s", data->selected_folder);
         gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_next), FALSE);
@@ -258,14 +240,36 @@ void on_btn_next_clicked(GtkButton *button, gpointer user_data) {
     }
 }
 
-void resize_image(GtkWidget *widget, GdkRectangle *rectangle, gpointer user_data) {
+void on_mi_save_clicked(GtkMenuItem *menu_item, gpointer user_data) {
     data *data = user_data;
-    if (data->img != NULL) {
-        update_image(data);
-    }
+    save(TMPFILE, data->selected_folder);
+    gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_save), FALSE);
+    gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_open), TRUE);
 }
 
-// called when window is closed
+void show_save_dialog(GtkMenuItem *menu_item, gpointer user_data) {
+    data *data = user_data;
+    FILE *file;
+    g_debug("Showing save dialog\n");
+    if ((file = fopen(TMPFILE, "r")) != NULL) {
+        fclose(file);
+        gtk_window_present(GTK_WINDOW(data->elements.save_dialog));
+    } else
+        destroy(GTK_WINDOW(data->elements.main_window), data);
+}
+
+void on_btn_save_cancel_clicked(GtkButton *button, gpointer user_data) {
+    gui_elements *elements = user_data;
+    g_debug("Hiding save dialog");
+    gtk_widget_hide(elements->save_dialog);
+}
+
+void on_btn_save_clicked(GtkButton *button, gpointer user_data) {
+    data *data = user_data;
+    save(TMPFILE, data->selected_folder);
+    destroy(GTK_WINDOW(data->elements.main_window), data);
+}
+
 void destroy(GtkWindow *self, gpointer user_data) {
     data *data = user_data;
     if (data->img != NULL) 
@@ -276,10 +280,10 @@ void destroy(GtkWindow *self, gpointer user_data) {
     g_free(data->selected_folder);
     free(data->name);
     FILE *file;
-    if ((file = fopen(data->tmpfile, "r")) != NULL) {
+    if ((file = fopen(TMPFILE, "r")) != NULL) {
         fclose(file);
-        if (remove(data->tmpfile)) {
-            g_error("Error removing file %s\n", data->tmpfile);
+        if (remove(TMPFILE)) {
+            g_error("Error removing file %s\n", TMPFILE);
             exit(EXIT_FAILURE);
         }
     }

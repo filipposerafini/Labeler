@@ -1,13 +1,12 @@
 #include "gui.h"
 
-int main(int argc, char *argv[])
-{
+int main(int argc, char *argv[]) {
     data data;
  
     gtk_init(&argc, &argv);
  
     GtkBuilder *builder = gtk_builder_new();
-    gtk_builder_add_from_file(builder, "src/gui.glade", NULL);
+    gtk_builder_add_from_file(builder, "src/labeller.ui", NULL);
 
     init_data(&data, builder);
  
