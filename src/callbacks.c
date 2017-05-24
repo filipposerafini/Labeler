@@ -61,7 +61,7 @@ void on_btn_open_clicked(GtkButton *button, gpointer user_data) {
     data *data = user_data;
     // Close previous dir
     closedir(data->dir);
-    
+
     // Try to open selected directory
     if ((data->dir = opendir(data->selected_folder)) == NULL) {
         gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_open), FALSE);
@@ -79,7 +79,7 @@ void on_btn_open_clicked(GtkButton *button, gpointer user_data) {
             update_image(data);
             gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_open), FALSE);
             gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_save), TRUE);
-            gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_edit), TRUE); 
+            gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_edit), TRUE);
             gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_next), TRUE);
             gtk_widget_set_sensitive(GTK_WIDGET(data->elements.event_box), TRUE);
         }
@@ -149,7 +149,7 @@ gboolean on_button_press_event(GtkWidget *image, GdkEvent *event, gpointer user_
                 data->corner = cvPoint(x, y);
                 data->opposite_corner = cvPoint(x, y);
             } else {
-                data->corner = cvPoint(-1, -1); 
+                data->corner = cvPoint(-1, -1);
                 data->opposite_corner = cvPoint(-1, -1);
             }
         }
@@ -272,9 +272,9 @@ void on_btn_save_clicked(GtkButton *button, gpointer user_data) {
 
 void destroy(GtkWindow *self, gpointer user_data) {
     data *data = user_data;
-    if (data->img != NULL) 
+    if (data->img != NULL)
         cvReleaseImage(&data->img);
-    if (data->tmp != NULL) 
+    if (data->tmp != NULL)
         cvReleaseImage(&data->tmp);
     closedir(data->dir);
     g_free(data->selected_folder);
@@ -289,4 +289,3 @@ void destroy(GtkWindow *self, gpointer user_data) {
     }
     gtk_main_quit();
 }
-

@@ -6,7 +6,7 @@ void print_label(label label) {
     printf("Center: %dx%d, width: %d, height: %d\n", label.center.x, label.center.y, label.width, label.height);
 }
 
-// Print information for every element in 'labels', 
+// Print information for every element in 'labels',
 // also displaying witch is selected and/or copied
 void debug_print(labels labels) {
     if (labels.count > 0) {
@@ -34,7 +34,7 @@ bool over_label(int x, int y, label label) {
 bool select_label(int x, int y, labels *labels) {
     labels->selected = -1;
     for (int i = 0; i < labels->count; i++) {
-        if (over_label(x, y, labels->label[i])) {                   
+        if (over_label(x, y, labels->label[i])) {
             if (labels->label[i].selected) {
                 labels->selected = i;
             }
@@ -47,7 +47,7 @@ bool select_label(int x, int y, labels *labels) {
     if (labels->selected >= 0) {
         labels->label[labels->selected].selected = true;
         return true;
-    } else 
+    } else
         return false;
 }
 
@@ -75,7 +75,7 @@ bool create_label(labels *labels, CvPoint center, int width, int height) {
         labels->label[labels->count].selected = false;
         labels->count++;
         return true;
-    } else 
+    } else
         return false;
 }
 
@@ -108,7 +108,7 @@ void reset(labels *labels) {
     labels->copied = -1;
 }
 
-// Load labels for image 'imagename' from file 'filename' 
+// Load labels for image 'imagename' from file 'filename'
 // and save them to 'dest'
 void load_labels(char *filename, char *imagename, labels *dest) {
     FILE *file;
@@ -157,4 +157,3 @@ void save_labels(char *filename, char *imagename, labels src) {
         fclose(file);
     }
 }
-

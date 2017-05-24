@@ -44,7 +44,7 @@ void show_image(IplImage *img, GtkImage *image, GtkWidget *widget) {
     int height = gdk_pixbuf_get_height(pixbuf);
     GtkAllocation allocation;
     gtk_widget_get_allocation(widget, &allocation);
-    
+
     if (width > (allocation.width - 10)) {
         ratio = ((float)allocation.width - 10) / width;
         width = width * ratio;
@@ -89,7 +89,7 @@ bool open_next_image(data *data) {
             }
         }
     }
-    
+
     if (dd == NULL)
         // No valid image found
         return false;
@@ -142,8 +142,8 @@ void update_image(data *data) {
     show_image(data->tmp, data->elements.image, data->elements.main_window);
 }
 
-// Convert from coordinates ('pointer_x', 'pointer_y') relative to the container 'widget' 
-// to coordinates ('*x', '*y') relative to 'img'. 
+// Convert from coordinates ('pointer_x', 'pointer_y') relative to the container 'widget'
+// to coordinates ('*x', '*y') relative to 'img'.
 // The function use 'image' to get effective dimention of pixbuf if it was resized.
 bool convert_coordinates(float pointer_x, float pointer_y, GtkWidget *widget, int *x, int *y, IplImage *img, GtkImage *image) {
     GtkAllocation allocation;
@@ -151,13 +151,13 @@ bool convert_coordinates(float pointer_x, float pointer_y, GtkWidget *widget, in
     GdkPixbuf *pixbuf = gtk_image_get_pixbuf(image);
     float width = gdk_pixbuf_get_width(pixbuf);
     float height = gdk_pixbuf_get_height(pixbuf);
-    float xrap = width / img->width;    
+    float xrap = width / img->width;
     float yrap = height / img->height;
 
     // Calculate image relative coordinates
     *x = (pointer_x - (allocation.width - width)/2) / xrap;
     *y = (pointer_y - (allocation.height - height)/2) / yrap;
-    
+
     // Check if point is inside the image
     if (*x < 0 || *x > img->width ||*y < 0 || *y > img->height)
         return false;
@@ -189,4 +189,3 @@ void save(char *tmpfile, char *folder_name) {
     free(destfolder);
     free(outfile);
 }
-

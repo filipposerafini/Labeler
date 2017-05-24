@@ -47,7 +47,7 @@ void print_label(label label);
 
 /**
  * Show informations for struct labels.
- * Calls print_label() functions for every label in the array and 
+ * Calls print_label() functions for every label in the array and
  * display also which one is selected and/or copied for debug purpose.
  * @param labels labels struct to print information
  */
@@ -144,7 +144,7 @@ void load_labels(char *filename, char *imagename, labels *dest);
  * Write in given file the information about every label
  * from source labels struct.
  * The function write a row per label, including image name,
- * center coordinates, width and height. 
+ * center coordinates, width and height.
  * All the information are separated by semicolon.
  *
  * @param filename file to write in
@@ -154,4 +154,3 @@ void load_labels(char *filename, char *imagename, labels *dest);
 void save_labels(char *filename, char *imagename, labels src);
 
 #endif
-

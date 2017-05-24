@@ -45,7 +45,7 @@ typedef struct {
 } gui_elements;
 
 /**
- * Struct that contains all data used by the program 
+ * Struct that contains all data used by the program
  */
 typedef struct {
     gui_elements elements;      /**< User interface elements */
@@ -60,7 +60,6 @@ typedef struct {
     CvPoint opposite_corner;    /**< Currently drawing label opposite_corner point */
     bool drawing;               /**< Drawing label flag */
     bool moving;                /**< Moving label flag */
-    bool control;               /**< Keyboard left Ctrl flag */
 } data;
 
 void init_data(data *data, GtkBuilder *builder);
@@ -82,7 +81,7 @@ void show_image(IplImage *img, GtkImage *image, GtkWidget *widget);
  * Search for the next valid image in selected directory accepting only .jpg/.png files,
  * and show it calling show_image().
  *
- * @param data 
+ * @param data
  *
  * @return true on success, false if there isn't any other valid image in current directory
  */
@@ -98,7 +97,7 @@ void update_image(data *data);
 
 /**
  * Convert coordinates.
- * Convert from container relative coordinates to image relative coordinates. 
+ * Convert from container relative coordinates to image relative coordinates.
  *
  * @param pointer_x Container relative x coordinate
  * @param pointer_y Container relative y coordinate
@@ -110,7 +109,7 @@ void update_image(data *data);
  *
  * @return true if given point is inside the image, false otherwise
  */
-bool convert_coordinates(float pointer_x, float pointer_y, GtkWidget *widget, int *x, int *y, IplImage *img, GtkImage *image); 
+bool convert_coordinates(float pointer_x, float pointer_y, GtkWidget *widget, int *x, int *y, IplImage *img, GtkImage *image);
 
 /**
  * Save labels to file.
@@ -126,7 +125,7 @@ void save(char *tmpfile, char *folder_name);
 void resize_image(GtkWidget *widget, GdkRectangle *rectangle, gpointer user_data);
 
 void show_open_dialog(GtkMenuItem *image_menu_item, gpointer user_data);
-void on_folder_chooser_file_set(GtkFileChooser *file_chooser, gpointer user_data); 
+void on_folder_chooser_file_set(GtkFileChooser *file_chooser, gpointer user_data);
 void on_file_chooser_file_set(GtkFileChooser *file_chooser, gpointer user_data);
 void on_btn_open_cancel_clicked(GtkButton *button, gpointer user_data);
 void on_btn_open_clicked(GtkButton *button, gpointer user_data);
@@ -136,9 +135,6 @@ void on_mi_paste_activate(GtkMenuItem *menu_item, gpointer user_data);
 void on_mi_delete_activate(GtkMenuItem *menu_item, gpointer user_data);
 void on_mi_reset_activate(GtkMenuItem *menu_item, gpointer user_data);
 void on_mi_print_activate(GtkMenuItem *menu_item, gpointer user_data);
-
-gboolean on_key_press_event(GtkWidget *widget, GdkEvent *event, gpointer user_data);
-gboolean on_key_release_event(GtkWidget *widget, GdkEvent *event, gpointer user_data);
 
 gboolean on_button_press_event(GtkWidget *image, GdkEvent *event, gpointer user_data);
 gboolean on_button_press_event(GtkWidget *image, GdkEvent *event, gpointer user_data);
@@ -152,4 +148,3 @@ void on_btn_save_clicked(GtkButton *button, gpointer user_data);
 void destroy(GtkWindow *window, gpointer pointer);
 
 #endif
-
