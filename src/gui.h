@@ -33,6 +33,8 @@ typedef struct {
     GtkMenuItem *mi_copy;
     GtkMenuItem *mi_paste;
     GtkMenuItem *mi_delete;
+    GtkMenuItem *mi_classes;
+    GtkMenu *menu_classes;
     GtkMenuItem *mi_print;
     GtkWidget *event_box;
     GtkImage *image;
@@ -41,6 +43,9 @@ typedef struct {
     GtkWidget *open_dialog;
     GtkButton *btn_cancel;
     GtkButton *btn_open;
+    GtkListBox *class_list;
+    GtkEntry *entry_class;
+    GtkButton *btn_add_class;
     GtkWidget *save_dialog;
 } gui_elements;
 
@@ -127,9 +132,12 @@ void resize_image(GtkWidget *widget, GdkRectangle *rectangle, gpointer user_data
 void show_open_dialog(GtkMenuItem *image_menu_item, gpointer user_data);
 void on_folder_chooser_file_set(GtkFileChooser *file_chooser, gpointer user_data);
 void on_file_chooser_file_set(GtkFileChooser *file_chooser, gpointer user_data);
+void on_btn_add_class_clicked(GtkButton *button, gpointer user_data);
+void on_btn_remove_class_clicked(GtkButton *button, gpointer user_data);
 void on_btn_open_cancel_clicked(GtkButton *button, gpointer user_data);
 void on_btn_open_clicked(GtkButton *button, gpointer user_data);
 
+void on_mi_class_activate(GtkMenuItem *menu_item, gpointer user_data);
 void on_mi_copy_activate(GtkMenuItem *menu_item, gpointer user_data);
 void on_mi_paste_activate(GtkMenuItem *menu_item, gpointer user_data);
 void on_mi_delete_activate(GtkMenuItem *menu_item, gpointer user_data);

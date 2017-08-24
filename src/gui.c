@@ -4,9 +4,9 @@
 void init_data(data *data, GtkBuilder *builder) {
     init_gui_elements(&data->elements, builder);
     reset(&data->labels);
+    reset_classes(&data->labels);
     data->drawing = false;
     data->moving = false;
-    data->control = false;
     data->img = NULL;
     data->tmp = NULL;
     data->selected_file = NULL;
@@ -18,20 +18,25 @@ void init_data(data *data, GtkBuilder *builder) {
 // Initialize all elements in 'elements'
 void init_gui_elements(gui_elements *elements, GtkBuilder *builder) {
     elements->main_window = GTK_WIDGET(gtk_builder_get_object(builder, "main_window"));
-    elements->open_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "open_dialog"));
-    elements->btn_cancel = GTK_BUTTON(gtk_builder_get_object(builder, "btn_cancel"));
-    elements->btn_open = GTK_BUTTON(gtk_builder_get_object(builder, "btn_open"));
     elements->mi_open = GTK_MENU_ITEM(gtk_builder_get_object(builder, "mi_open"));
-    elements->mi_edit = GTK_MENU_ITEM(gtk_builder_get_object(builder, "mi_edit"));
     elements->mi_save = GTK_MENU_ITEM(gtk_builder_get_object(builder, "mi_save"));
+    elements->mi_reset = GTK_MENU_ITEM(gtk_builder_get_object(builder, "mi_reset"));
+    elements->mi_edit = GTK_MENU_ITEM(gtk_builder_get_object(builder, "mi_edit"));
     elements->mi_copy = GTK_MENU_ITEM(gtk_builder_get_object(builder, "mi_copy"));
     elements->mi_paste = GTK_MENU_ITEM(gtk_builder_get_object(builder, "mi_paste"));
     elements->mi_delete = GTK_MENU_ITEM(gtk_builder_get_object(builder, "mi_delete"));
-    elements->mi_reset = GTK_MENU_ITEM(gtk_builder_get_object(builder, "mi_reset"));
+    elements->mi_classes = GTK_MENU_ITEM(gtk_builder_get_object(builder, "mi_classes"));
+    elements->menu_classes = GTK_MENU(gtk_builder_get_object(builder, "menu_classes"));
     elements->mi_print = GTK_MENU_ITEM(gtk_builder_get_object(builder, "mi_print"));
     elements->event_box = GTK_WIDGET(gtk_builder_get_object(builder, "event_box"));
     elements->image = GTK_IMAGE(gtk_builder_get_object(builder, "image"));
     elements->btn_next = GTK_BUTTON(gtk_builder_get_object(builder, "btn_next"));
+    elements->open_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "open_dialog"));
+    elements->btn_cancel = GTK_BUTTON(gtk_builder_get_object(builder, "btn_cancel"));
+    elements->btn_open = GTK_BUTTON(gtk_builder_get_object(builder, "btn_open"));
+    elements->class_list = GTK_LIST_BOX(gtk_builder_get_object(builder, "class_list"));
+    elements->entry_class = GTK_ENTRY(gtk_builder_get_object(builder, "entry_class"));
+    elements->btn_add_class = GTK_BUTTON(gtk_builder_get_object(builder, "btn_add_class"));
     elements->save_dialog = GTK_WIDGET(gtk_builder_get_object(builder, "save_dialog"));
 }
 
@@ -119,24 +124,40 @@ bool open_next_image(data *data) {
     }
 }
 
+CvScalar select_color(int index) {
+    CvScalar color;
+    switch (index) {
+        case 0: color = COLOR_0; break;
+        case 1: color = COLOR_1; break;
+        case 2: color = COLOR_2; break;
+        case 3: color = COLOR_3; break;
+        case 4: color = COLOR_4; break;
+        case 5: color = COLOR_5; break;
+        case 6: color = COLOR_6; break;
+        case 7: color = COLOR_7; break;
+        case 8: color = COLOR_8; break;
+        case 9: color = COLOR_9; break;
+        default: break;
+    }
+    return color;
+}
+
 // Refresh the image drawing current and previous labels
 void update_image(data *data) {
-    CvScalar color = cvScalar(0, 0, 255, 0);
-    CvScalar color_selected = cvScalar(255, 0, 0, 0);
 
     // Create a copy of original image
     cvCopy(data->img, data->tmp, NULL);
 
     // Draw all labels
     if (data->drawing && data->labels.count < MAX_LABELS)
-        draw_label(data->tmp, data->corner, data->opposite_corner, color, true);
+        draw_label(data->tmp, data->corner, data->opposite_corner, select_color(data->labels.selected_class), true);
     for (int i = 0; i < data->labels.count; i++) {
         CvPoint corner1 = cvPoint(data->labels.label[i].center.x + data->labels.label[i].width, data->labels.label[i].center.y + data->labels.label[i].height);
         CvPoint corner2 = cvPoint(2 * data->labels.label[i].center.x - corner1.x, 2 * data->labels.label[i].center.y - corner1.y);
         if (data->labels.label[i].selected)
-            draw_label(data->tmp, corner1, corner2, color_selected, true);
+            draw_label(data->tmp, corner1, corner2, COLOR_SELECTED, true);
         else
-            draw_label(data->tmp, corner1, corner2, color, false);
+            draw_label(data->tmp, corner1, corner2, select_color(data->labels.label[i].class), false);
     }
     // Show the updated image
     show_image(data->tmp, data->elements.image, data->elements.main_window);
@@ -165,6 +186,16 @@ bool convert_coordinates(float pointer_x, float pointer_y, GtkWidget *widget, in
         return true;
 }
 
+void save_classes(char *tmpfile, labels labels) {
+    FILE *file;
+    if ((file = fopen(tmpfile, "r")) != NULL) {
+        fprintf(file, "%d\n", labels.classes_count);
+        for (int i = 0; i < labels.classes_count; i++)
+            fprintf(file, "%s\n", labels.classes[i]);
+        fclose(file);
+    }
+}
+
 // Create a folder in out/ named 'folder_name' and place in it a .csv file
 // with all label imformations
 void save(char *tmpfile, char *folder_name) {
@@ -176,6 +207,7 @@ void save(char *tmpfile, char *folder_name) {
     sprintf(outfile, "%s/%s.csv", destfolder, p);
     if ((file = fopen(tmpfile, "r")) != NULL) {
         fclose(file);
+
         // Create destination folder
         if (mkdir(destfolder, 0755) == 0)
             g_message("Created folder %s", destfolder);

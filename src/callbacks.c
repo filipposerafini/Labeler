@@ -1,5 +1,21 @@
 #include "gui.h"
 
+void add_class_row(data *data, char *class_name, bool loaded) {
+
+    // Get row from builder
+    GtkBuilder *builder = gtk_builder_new();
+    gtk_builder_add_from_file(builder, "src/labeller.ui", NULL);
+    GtkListBoxRow *row = GTK_LIST_BOX_ROW(gtk_builder_get_object(builder, "class_row"));
+    GtkLabel *label = GTK_LABEL(gtk_builder_get_object(builder, "class_label"));
+    GtkButton *button = GTK_BUTTON(gtk_builder_get_object(builder, "btn_remove_class"));
+    g_signal_connect(button, "clicked", G_CALLBACK(on_btn_remove_class_clicked), data);
+    if (loaded)
+        gtk_widget_set_sensitive(GTK_WIDGET(button), FALSE);
+    gtk_label_set_text(label, class_name);
+    gtk_list_box_insert(data->elements.class_list, GTK_WIDGET(row), -1);
+    g_object_unref(builder);
+}
+
 void resize_image(GtkWidget *widget, GdkRectangle *rectangle, gpointer user_data) {
     data *data = user_data;
     if (data->img != NULL) {
@@ -23,7 +39,8 @@ void on_folder_chooser_file_set(GtkFileChooser *folder_chooser, gpointer user_da
             gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_open), FALSE);
             g_critical("Failed to open %s. Please select another folder", data->selected_folder);
         } else {
-            gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_open), TRUE);
+            if (data->labels.classes_count > 0)
+                gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_open), TRUE);
             closedir(dir);
             g_message("Selected folder %s", data->selected_folder);
         }
@@ -33,28 +50,111 @@ void on_folder_chooser_file_set(GtkFileChooser *folder_chooser, gpointer user_da
 void on_file_chooser_file_set(GtkFileChooser *file_chooser, gpointer user_data) {
     data *data = user_data;
     char *p;
+    FILE *file;
     // Read file name
     if ((data->selected_file = gtk_file_chooser_get_filename(GTK_FILE_CHOOSER(file_chooser))) != NULL) {
         // Check file extension
         if ((p = strrchr(data->selected_file, '.')) != NULL) {
             if (strcmp(p, ".csv")) {
+                data->selected_file = NULL;
                 g_warning("File format incompatible. Select .csv file");
                 gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_open), FALSE);
             } else {
-                g_message("Selected file %s", data->selected_file);
-                gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_open), TRUE);
+                if ((file = fopen(data->selected_file, "r")) != NULL) {
+                    int num;
+                    char class[64];
+
+                    if (fscanf(file, "%d\n", &num) == EOF) {
+                        g_error("Error reading file %s", data->selected_file);
+                        exit(EXIT_FAILURE);
+                    }
+
+                    g_message("Reset classes");
+                    reset_classes(&data->labels);
+
+                    for (int i = 0; i < num; i++) {
+                        if (fscanf(file, "%s\n", class) == EOF) {
+                            g_error("Error reading file %s", data->selected_file);
+                            exit(EXIT_FAILURE);
+                        }
+                        g_message("New Class");
+                        if (add_class(class, &data->labels)) {
+                            add_class_row(data, class, true);
+                        }
+                    }
+
+                    g_message("Selected file %s", data->selected_file);
+
+                    gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_add_class), FALSE);
+
+                    if (data->selected_folder != NULL)
+                        gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_open), TRUE);
+                } else {
+                    g_warning("Error reading file %s", data->selected_file);
+                    data->selected_file = NULL;
+                    gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_open), FALSE);
+                }
             }
         } else {
+            data->selected_file = NULL;
             g_warning("File format incompatible. Select .csv file");
             gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_open), FALSE);
         }
     }
 }
 
+void on_btn_add_class_clicked(GtkButton *button, gpointer user_data) {
+    data *data = user_data;
+
+    if (gtk_entry_get_text_length(data->elements.entry_class) > 0) {
+        char *class_name = gtk_entry_get_text(data->elements.entry_class);
+
+        // Try to add new class
+        g_message("New Class");
+        if (add_class(class_name, &data->labels)) {
+
+            // Add class row to list box
+            add_class_row(data, class_name, false);
+
+            // Reset entry
+            gtk_entry_set_text(data->elements.entry_class, "");
+
+            // Set open button sensitive
+            if (data->labels.classes_count > 0 && data->selected_folder != NULL)
+                gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_open), TRUE);
+        }
+        else
+            g_warning("Class cannot be added");
+    }
+}
+
+void on_btn_remove_class_clicked(GtkButton *button, gpointer user_data) {
+    data* data = user_data;
+
+    // Get class to remove
+    GtkBox *box = GTK_BOX(gtk_widget_get_parent(gtk_widget_get_parent(GTK_WIDGET(button)))); 
+    GList *children = gtk_container_get_children(GTK_CONTAINER(box));
+    char *class = gtk_label_get_text(GTK_LABEL(children->data));
+    g_list_free(children);
+
+    // Remove class
+    int class_index = remove_class(class, &data->labels);
+    if (class_index >= 0) {
+        g_message("Removed class %d", class_index);
+
+        // Destroy related widget
+        gtk_widget_destroy(gtk_widget_get_parent(GTK_WIDGET(box)));
+
+        // Eventually disable open button
+        if (data->labels.classes_count == 0)
+            gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_open), FALSE);
+    }
+}
+
 void on_btn_open_cancel_clicked(GtkButton *button, gpointer user_data) {
-    gui_elements *elements = user_data;
+    data *data = user_data;
     g_debug("Hiding open dialog");
-    gtk_widget_hide(elements->open_dialog);
+    gtk_widget_hide(data->elements.open_dialog);
 }
 
 void on_btn_open_clicked(GtkButton *button, gpointer user_data) {
@@ -80,8 +180,39 @@ void on_btn_open_clicked(GtkButton *button, gpointer user_data) {
             gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_open), FALSE);
             gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_save), TRUE);
             gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_edit), TRUE);
+            gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_classes), TRUE);
             gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_next), TRUE);
             gtk_widget_set_sensitive(GTK_WIDGET(data->elements.event_box), TRUE);
+
+
+            // Repopulate it
+            GtkAccelGroup *accel_group = gtk_accel_group_new();
+            gtk_window_add_accel_group(GTK_WINDOW(data->elements.main_window), accel_group);
+
+            GtkRadioMenuItem *group = NULL;
+            for (int i = 0; i < data->labels.classes_count; i++) {
+                GtkWidget *mi_class = gtk_radio_menu_item_new_with_label_from_widget(group, data->labels.classes[i]);
+                gtk_widget_show(mi_class);
+                gtk_container_add(GTK_CONTAINER(data->elements.menu_classes), mi_class);
+                g_signal_connect(mi_class, "activate", G_CALLBACK(on_mi_class_activate), &data->labels);
+                gtk_widget_add_accelerator(mi_class, "activate", accel_group, GDK_KEY_0 + i, GDK_CONTROL_MASK, GTK_ACCEL_VISIBLE);
+                group = GTK_RADIO_MENU_ITEM(mi_class);
+            }
+        }
+    }
+}
+
+void on_mi_class_activate(GtkMenuItem *menu_item, gpointer user_data) {
+    labels *labels = user_data;
+    for (int i = 0; i < labels->classes_count; i++) {
+        if(!strcmp(gtk_menu_item_get_label(menu_item), labels->classes[i])) {
+            labels->selected_class = i;
+            g_message("Selected class %d", i);
+            if (labels->selected >= 0) {
+                labels->label[labels->selected].class = i;
+                g_message("Label %d -> Class changed to %d", labels->selected, i);
+            }
+            break;
         }
     }
 }
@@ -90,7 +221,7 @@ void on_mi_copy_activate(GtkMenuItem *menu_item, gpointer user_data) {
     data *data = user_data;
     data->labels.copied = data->labels.selected;
     gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_paste), TRUE);
-    g_message("Label %d copied\n", data->labels.copied);
+    g_message("Label %d copied", data->labels.copied);
 }
 
 void on_mi_paste_activate(GtkMenuItem *menu_item, gpointer user_data) {
@@ -99,7 +230,7 @@ void on_mi_paste_activate(GtkMenuItem *menu_item, gpointer user_data) {
         g_message("Label %d pasted", data->labels.count - 1);
         update_image(data);
     } else
-        g_warning("Label not pasted: too many labels\n");
+        g_warning("Label not pasted: too many labels");
 }
 
 void on_mi_delete_activate(GtkMenuItem *menu_item, gpointer user_data) {
@@ -160,7 +291,7 @@ gboolean on_button_press_event(GtkWidget *image, GdkEvent *event, gpointer user_
         // Select label
         if (select_label(x, y, &data->labels)) {
             data->moving = true;
-            g_message("Selected label %d\n", data->labels.selected);
+            g_message("Selected label %d", data->labels.selected);
             gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_copy), TRUE);
             gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_delete), TRUE);
         } else {
@@ -188,13 +319,13 @@ gboolean on_button_release_event(GtkWidget *image, GdkEvent *event, gpointer use
             center = cvPoint((data->corner.x + data->opposite_corner.x)/2, (data->corner.y + data->opposite_corner.y)/2);
             width = abs(center.x - data->corner.x);
             height = abs(center.y - data->corner.y);
-            if (create_label(&data->labels, center, width, height)) {
+            if (create_label(&data->labels, center, width, height, data->labels.selected_class)) {
                 g_message("New label");
                 printf("Label %d -> ", data->labels.count - 1);
                 print_label(data->labels.label[data->labels.count - 1]);
                 update_image(data);
             } else
-                g_warning("Label not saved: Too many labels\n");
+                g_warning("Label not saved: Too many labels");
             if (data->labels.count == 1)
                 gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_reset), TRUE);
         }
@@ -244,7 +375,26 @@ void on_mi_save_clicked(GtkMenuItem *menu_item, gpointer user_data) {
     data *data = user_data;
     save(TMPFILE, data->selected_folder);
     gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_save), FALSE);
+    gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_next), FALSE);
+    gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_classes), FALSE);
+    gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_edit), FALSE);
     gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_open), TRUE);
+    gtk_widget_set_sensitive(GTK_WIDGET(data->elements.event_box), FALSE);
+
+    // Reset cLasses
+    reset_classes(&data->labels);
+
+    // Destroy list box & classes menu children
+    GList *children, *iter;
+    children = gtk_container_get_children(GTK_CONTAINER(data->elements.class_list));
+    for(iter = children; iter != NULL; iter = g_list_next(iter))
+        gtk_widget_destroy(GTK_WIDGET(iter->data));
+
+    children = gtk_container_get_children(GTK_CONTAINER(data->elements.menu_classes));
+    for(iter = children; iter != NULL; iter = g_list_next(iter))
+        gtk_widget_destroy(GTK_WIDGET(iter->data));
+    g_list_free(children);
+    g_list_free(iter);
 }
 
 void show_save_dialog(GtkMenuItem *menu_item, gpointer user_data) {
@@ -283,7 +433,7 @@ void destroy(GtkWindow *self, gpointer user_data) {
     if ((file = fopen(TMPFILE, "r")) != NULL) {
         fclose(file);
         if (remove(TMPFILE)) {
-            g_error("Error removing file %s\n", TMPFILE);
+            g_error("Error removing file %s", TMPFILE);
             exit(EXIT_FAILURE);
         }
     }

@@ -11,7 +11,19 @@
 #include <opencv/cv.h>
 
 #define MAX_LABELS 64   /**< Maximum number of allowed label per image */
+#define MAX_CLASSES 10  /**< Maximum number of allowed classes per project */
 #define ALPHA 0.4       /**< Transparency value for label with filled background */
+#define COLOR_SELECTED cvScalar(255, 0, 0, 0)
+#define COLOR_0 cvScalar(0, 128, 255, 0)
+#define COLOR_1 cvScalar(255, 128, 0, 0)
+#define COLOR_2 cvScalar(0, 255, 0, 0)
+#define COLOR_3 cvScalar(127, 0, 255, 0)
+#define COLOR_4 cvScalar(255, 255, 0, 0)
+#define COLOR_5 cvScalar(0, 0, 255, 0)
+#define COLOR_6 cvScalar(255, 0, 255, 0)
+#define COLOR_7 cvScalar(0, 255, 255, 0)
+#define COLOR_8 cvScalar(255, 0, 127, 0)
+#define COLOR_9 cvScalar(0, 0, 0, 0)
 
 /**
  * Define boolean type.
@@ -26,6 +38,7 @@ typedef struct {
     int width;          /**< Distance from center to left/right edge */
     int height;         /**< Distance from center to top/bottom edge */
     bool selected;      /**< true if label is currently selected, false otherwise */
+    int class;          /**< Indicate witch class the label belongs to */
 } label;
 
 /**
@@ -36,6 +49,9 @@ typedef struct {
     int count;                  /**< Array logical dimention */
     int selected;               /**< Index of currently selected label in the array. -1 if no one is selected */
     int copied;                 /**< Index of currenntly copied label in the array. -1 if no one is selected */
+    char classes[MAX_CLASSES][64];
+    int classes_count;
+    int selected_class;
 } labels;
 
 /**
@@ -95,9 +111,10 @@ void draw_label(IplImage *img, CvPoint corner1, CvPoint corner2, CvScalar color,
  * @param center Central coordinates of the new label
  * @param width Width of the new label
  * @param height Height of the new label
+ * @param class Class of the new label
  * @return true in case of success, false if maximum number of labels is reached
  */
-bool create_label(labels *dest, CvPoint center, int width, int height);
+bool create_label(labels *dest, CvPoint center, int width, int height, int class);
 
 /**
  * Paste copied label.
@@ -129,6 +146,14 @@ bool delete_label(labels *labels);
 void reset(labels *labels);
 
 /**
+ * Reset classes.
+ * Re-initialize classes parameters in labels struct,
+ * setting logical dimention to 0 and selected index to -1
+ * @param labels
+ */
+void reset_classes(labels *labels);
+
+/**
  * Load labels from file.
  * Read given file searching for given imagename labels,
  * and save them to dest labels struct.
@@ -152,5 +177,9 @@ void load_labels(char *filename, char *imagename, labels *dest);
  * @param src source labels struct
  */
 void save_labels(char *filename, char *imagename, labels src);
+
+bool add_class(char *name, labels* labels);
+
+int remove_class(char *name, labels* labels);
 
 #endif
