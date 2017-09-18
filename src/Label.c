@@ -1,30 +1,51 @@
 #include "Label.h"
 
-// Print informations about label 'label':
-// Center coordinates (x,y), width and height
-void print_label(label label) {
-    printf("Center: %dx%d, width: %d, height: %d, class: %d\n", label.center.x, label.center.y, label.width, label.height, label.class);
+// Save a new label with given arguments in 'labels'
+// Return true in case of success and false when labels array is full
+bool create_label(labels *labels, CvPoint center, int width, int height, int class) {
+    if (labels->count < MAX_LABELS) {
+        labels->label[labels->count].center = center;
+        labels->label[labels->count].width = width;
+        labels->label[labels->count].height = height;
+        labels->label[labels->count].selected = false;
+        labels->label[labels->count].class = class;
+        labels->count++;
+        return true;
+    } else
+        return false;
 }
 
-// Print information for every element in 'labels',
-// also displaying witch is selected and/or copied
-void debug_print(labels labels) {
-    if (labels.count > 0) {
-        printf("\n**********************************************************************\n");
-        for (int i = 0; i < labels.count; i++) {
-            printf("Label %d -> ", i);
-            if (labels.selected == i) printf("(selected) ");
-            if (labels.copied == i) printf("(copied) ");
-            print_label(labels.label[i]);
-        }
-        printf("**********************************************************************\n");
-        for (int i = 0; i < labels.classes_count; i++) {
-            printf("Class %d -> %s", i, labels.classes[i]);
-            if (labels.selected_class == i) printf(" (selected)");
-            printf("\n");
-        }
-        printf("**********************************************************************\n\n");
+// Draw a rectangle in image 'image' from corner 'corner1' to corner 'corner2' with a colored border.
+// If 'fill' is true the rectangle has a transparent background with alpha='ALPHA'
+void draw_label(IplImage *image, CvPoint corner1, CvPoint corner2, CvScalar color, bool fill) {
+    if (fill) {
+        IplImage *rect = cvCreateImage(cvSize(image->width, image->height),image->depth, image->nChannels);
+        cvCopy(image, rect, NULL);
+        cvRectangle(rect, corner1, corner2, color, CV_FILLED, 8, 0);
+        cvAddWeighted(rect, ALPHA, image, 1 - ALPHA, 0, image);
+        cvReleaseImage(&rect);
     }
+    cvRectangle(image, corner1, corner2, color, 2, 8, 0);
+}
+
+// Select right color for the label
+CvScalar select_color(int index) {
+    CvScalar color;
+    switch (index) {
+        case -1: color = COLOR_SELECTED; break;
+        case 0: color = COLOR_0; break;
+        case 1: color = COLOR_1; break;
+        case 2: color = COLOR_2; break;
+        case 3: color = COLOR_3; break;
+        case 4: color = COLOR_4; break;
+        case 5: color = COLOR_5; break;
+        case 6: color = COLOR_6; break;
+        case 7: color = COLOR_7; break;
+        case 8: color = COLOR_8; break;
+        case 9: color = COLOR_9; break;
+        default: break;
+    }
+    return color;
 }
 
 // Check if a point of coorinates 'x', 'y' is the inside the label 'label'
@@ -51,34 +72,6 @@ bool select_label(int x, int y, labels *labels) {
     }
     if (labels->selected >= 0) {
         labels->label[labels->selected].selected = true;
-        return true;
-    } else
-        return false;
-}
-
-// Draw a rectangle in image 'image' from corner 'corner1' to corner 'corner2' with a colored border.
-// If 'fill' is true the rectangle has a transparent background with alpha='ALPHA'
-void draw_label(IplImage *image, CvPoint corner1, CvPoint corner2, CvScalar color, bool fill) {
-    if (fill) {
-        IplImage *rect = cvCreateImage(cvSize(image->width, image->height),image->depth, image->nChannels);
-        cvCopy(image, rect, NULL);
-        cvRectangle(rect, corner1, corner2, color, CV_FILLED, 8, 0);
-        cvAddWeighted(rect, ALPHA, image, 1 - ALPHA, 0, image);
-        cvReleaseImage(&rect);
-    }
-    cvRectangle(image, corner1, corner2, color, 2, 8, 0);
-}
-
-// Save a new label with given arguments in 'labels'
-// Return true in case of success and false when labels array is full
-bool create_label(labels *labels, CvPoint center, int width, int height, int class) {
-    if (labels->count < MAX_LABELS) {
-        labels->label[labels->count].center = center;
-        labels->label[labels->count].width = width;
-        labels->label[labels->count].height = height;
-        labels->label[labels->count].selected = false;
-        labels->label[labels->count].class = class;
-        labels->count++;
         return true;
     } else
         return false;
@@ -113,10 +106,62 @@ void reset(labels *labels) {
     labels->copied = -1;
 }
 
-// Reset classes parameters
-void reset_classes(labels *labels) {
-    labels->classes_count = 0;
-    labels->selected_class = 0;
+// Print informations about label 'label':
+// Center coordinates (x,y), width and height
+void print_label(label label) {
+    printf("Center: %dx%d, width: %d, height: %d, class: %d\n", label.center.x, label.center.y, label.width, label.height, label.class);
+}
+
+// Print information for every element in 'labels',
+// also displaying witch is selected and/or copied
+void debug_print(labels labels) {
+    if (labels.count > 0) {
+        printf("\n**********************************************************************\n");
+        for (int i = 0; i < labels.count; i++) {
+            printf("Label %d -> ", i);
+            if (labels.selected == i) printf("(selected) ");
+            if (labels.copied == i) printf("(copied) ");
+            print_label(labels.label[i]);
+        }
+        printf("**********************************************************************\n");
+        for (int i = 0; i < labels.classes_count; i++) {
+            printf("Class %d -> %s", i, labels.classes[i]);
+            if (labels.selected_class == i) printf(" (selected)");
+            printf("\n");
+        }
+        printf("**********************************************************************\n\n");
+    }
+}
+
+// Save every element stored in 'src' to file 'filename'
+// (and save an image in 'label_dir' with the drawed labels)
+// FILE FORMAT: 'imagename';x;y;width;height;class
+void save_labels(char *filename, char *imagename, labels src) {
+    FILE *file;
+    bool new_file = false;
+
+    if (src.count > 0) {
+        // Check if is new
+        if ((file = fopen(filename, "r")) == NULL)
+            new_file = true;
+        else
+            fclose(file);
+        // Open file in append mode
+        if ((file = fopen(filename, "a")) == NULL) {
+            printf("Error writing on file\n");
+            exit(EXIT_FAILURE);
+        }
+        // Write classes on top of new file
+        if (new_file) {
+            fprintf(file, "%d\n", src.classes_count);
+            for (int i = 0; i < src.classes_count; i++)
+                fprintf(file, "%s\n", src.classes[i]);
+        }
+        // Write labels to file
+        for (int i = 0; i < src.count; i++)
+            fprintf(file, "%s;%d;%d;%d;%d;%d\n", imagename, src.label[i].center.x, src.label[i].center.y, src.label[i].width, src.label[i].height, src.label[i].class);
+        fclose(file);
+    }
 }
 
 // Load labels for image 'imagename' from file 'filename'
@@ -132,17 +177,17 @@ void load_labels(char *filename, char *imagename, labels *dest) {
         exit(EXIT_FAILURE);
     }
 
+    // Skip classes lines
     if (fscanf(file, "%d\n", &num) == EOF) {
-        printf("Error reading file %s\n", filename);
-        exit(EXIT_FAILURE);
+        fclose(file);
+        return;
     }
 
     for (int i = 0; i < num; i++) {
         if (fscanf(file, "%s\n", class) == EOF) {
-            printf("Error reading file %s\n", filename);
-            exit(EXIT_FAILURE);
+            fclose(file);
+            return;
         }
-        add_class(class, dest);
     }
 
     // Read line
@@ -160,40 +205,32 @@ void load_labels(char *filename, char *imagename, labels *dest) {
     fclose(file);
 }
 
-// Save every element stored in 'src' to file 'filename'
-// (and save an image in 'label_dir' with the drawed labels)
-// FILE FORMAT: 'imagename';x;y;width;height;class
-void save_labels(char *filename, char *imagename, labels src) {
+// Load classes from file 'filename' to 'dest'
+bool load_classes(char *filename, labels *dest) {
     FILE *file;
-    bool new_file = false;
 
-    if (src.count > 0) {
-        // Check if is new
-        if ((file = fopen(filename, "r")) == NULL)
-            new_file = true;
-        else
+    if ((file = fopen(filename, "r")) != NULL) {
+        int num;
+        char class[64];
+        if (fscanf(file, "%d\n", &num) == EOF) { 
             fclose(file);
-
-        // Open file in append mode
-        if ((file = fopen(filename, "a")) == NULL) {
-            printf("Error writing on file\n");
-            exit(EXIT_FAILURE);
+            return false;
         }
-
-        // Write classes on top of new file
-        if (new_file) {
-            fprintf(file, "%d\n", src.classes_count);
-            for (int i = 0; i < src.classes_count; i++)
-                fprintf(file, "%s\n", src.classes[i]);
+        reset_classes(dest);
+        for (int i = 0; i < num; i++) {
+            if (fscanf(file, "%s\n", class) == EOF) {
+                fclose(file);
+                return false;
+            }
+            add_class(class, dest);
         }
-
-        // Write labels to file
-        for (int i = 0; i < src.count; i++)
-            fprintf(file, "%s;%d;%d;%d;%d;%d\n", imagename, src.label[i].center.x, src.label[i].center.y, src.label[i].width, src.label[i].height, src.label[i].class);
         fclose(file);
-    }
+        return true;
+    } else
+        return false;
 }
 
+// Add a new class with given name to 'labels', incrementing counter
 bool add_class(char *name, labels* labels) {
     if (labels->classes_count < MAX_CLASSES) {
         for (int i = 0; i < labels->classes_count; i++) {
@@ -202,14 +239,13 @@ bool add_class(char *name, labels* labels) {
         }
         strcpy(labels->classes[labels->classes_count], name);
         labels->classes_count++;
-        
         printf("Class %d -> %s\n", labels->classes_count - 1, name);
-        
         return true;
     } else
         return false;
 }
 
+// Remove a class with name 'name' from 'labels', decerementing counter
 int remove_class(char *name, labels* labels) {
     for (int i = 0; i < labels->classes_count; i++) {
         if (!strcmp(labels->classes[i], name)) {
@@ -220,4 +256,10 @@ int remove_class(char *name, labels* labels) {
         }
     }
     return -1;
+}
+
+// Reset classes parameters
+void reset_classes(labels *labels) {
+    labels->classes_count = 0;
+    labels->selected_class = 0;
 }

@@ -74,22 +74,24 @@ bool open_next_image(data *data) {
 
     // Cycle through directory looking for valid image
     while ((dd = readdir(data->dir)) != NULL) {
+        // Check if filename contains '.'
         if ((p = strrchr(dd->d_name, '.')) == NULL) {
-            g_debug("Skipped file: %s\n", dd->d_name);
+            g_debug("Skipped file: %s", dd->d_name);
             continue;
         }
         else {
+            // Check file format
             if (!strcmp(p, ".jpg") || !strcmp(p, ".JPG") || !strcmp(p, ".png") || !strcmp(p, ".PNG")) {
                 data->name = (char*)realloc(data->name, strlen(dd->d_name) - 3);
                 strncpy(data->name, dd->d_name, strlen(dd->d_name) - 4);
                 data->name[strlen(dd->d_name) - 4] = '\0';
                 src_img = (char*)malloc(strlen(dd->d_name) + strlen(data->selected_folder) + 2);
                 sprintf(src_img, "%s/%s", data->selected_folder, dd->d_name);
-                g_message("Opening file: %s\n", data->name);
+                g_message("Opening file: %s", data->name);
                 break;
             }
             else {
-                g_debug("Skipped file: %s\n", dd->d_name);
+                g_debug("Skipped file: %s", dd->d_name);
                 continue;
             }
         }
@@ -124,24 +126,6 @@ bool open_next_image(data *data) {
     }
 }
 
-CvScalar select_color(int index) {
-    CvScalar color;
-    switch (index) {
-        case 0: color = COLOR_0; break;
-        case 1: color = COLOR_1; break;
-        case 2: color = COLOR_2; break;
-        case 3: color = COLOR_3; break;
-        case 4: color = COLOR_4; break;
-        case 5: color = COLOR_5; break;
-        case 6: color = COLOR_6; break;
-        case 7: color = COLOR_7; break;
-        case 8: color = COLOR_8; break;
-        case 9: color = COLOR_9; break;
-        default: break;
-    }
-    return color;
-}
-
 // Refresh the image drawing current and previous labels
 void update_image(data *data) {
 
@@ -155,7 +139,7 @@ void update_image(data *data) {
         CvPoint corner1 = cvPoint(data->labels.label[i].center.x + data->labels.label[i].width, data->labels.label[i].center.y + data->labels.label[i].height);
         CvPoint corner2 = cvPoint(2 * data->labels.label[i].center.x - corner1.x, 2 * data->labels.label[i].center.y - corner1.y);
         if (data->labels.label[i].selected)
-            draw_label(data->tmp, corner1, corner2, COLOR_SELECTED, true);
+            draw_label(data->tmp, corner1, corner2, select_color(-1), true);
         else
             draw_label(data->tmp, corner1, corner2, select_color(data->labels.label[i].class), false);
     }
@@ -186,16 +170,6 @@ bool convert_coordinates(float pointer_x, float pointer_y, GtkWidget *widget, in
         return true;
 }
 
-void save_classes(char *tmpfile, labels labels) {
-    FILE *file;
-    if ((file = fopen(tmpfile, "r")) != NULL) {
-        fprintf(file, "%d\n", labels.classes_count);
-        for (int i = 0; i < labels.classes_count; i++)
-            fprintf(file, "%s\n", labels.classes[i]);
-        fclose(file);
-    }
-}
-
 // Create a folder in out/ named 'folder_name' and place in it a .csv file
 // with all label imformations
 void save(char *tmpfile, char *folder_name) {
@@ -216,7 +190,7 @@ void save(char *tmpfile, char *folder_name) {
             g_error("Error renaming the temporary file\n");
             exit(EXIT_FAILURE);
         } else
-            g_message("%s saved correctly\n", outfile);
+            g_message("%s saved correctly", outfile);
     }
     free(destfolder);
     free(outfile);

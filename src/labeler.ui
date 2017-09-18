@@ -193,7 +193,8 @@
                 <property name="visible">True</property>
                 <property name="sensitive">False</property>
                 <property name="can_focus">False</property>
-                <property name="label" translatable="yes">Classes</property>
+                <property name="label" translatable="yes">_Classes</property>
+                <property name="use_underline">True</property>
                 <child type="submenu">
                   <object class="GtkMenu" id="menu_classes">
                     <property name="visible">True</property>
@@ -514,10 +515,11 @@
                     <property name="layout_style">center</property>
                     <child>
                       <object class="GtkButton" id="btn_add_class">
-                        <property name="label" translatable="yes">Add</property>
+                        <property name="label" translatable="yes">_Add</property>
                         <property name="visible">True</property>
                         <property name="can_focus">True</property>
                         <property name="receives_default">True</property>
+                        <property name="use_underline">True</property>
                         <signal name="clicked" handler="on_btn_add_class_clicked" swapped="no"/>
                       </object>
                       <packing>
@@ -558,12 +560,12 @@
             <property name="layout_style">end</property>
             <child>
               <object class="GtkButton" id="btn_open_cancel">
-                <property name="label">gtk-cancel</property>
+                <property name="label">_Cancel</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
                 <property name="margin_left">5</property>
-                <property name="use_stock">True</property>
+                <property name="use_underline">True</property>
                 <signal name="clicked" handler="on_btn_open_cancel_clicked" swapped="no"/>
               </object>
               <packing>
@@ -574,12 +576,12 @@
             </child>
             <child>
               <object class="GtkButton" id="btn_open">
-                <property name="label">gtk-open</property>
+                <property name="label">_Open</property>
                 <property name="visible">True</property>
                 <property name="sensitive">False</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="use_stock">True</property>
+                <property name="use_underline">True</property>
                 <signal name="clicked" handler="on_btn_open_clicked" swapped="no"/>
               </object>
               <packing>
@@ -654,17 +656,16 @@
             <property name="can_focus">False</property>
             <property name="margin_left">5</property>
             <property name="margin_right">5</property>
+            <property name="spacing">10</property>
             <property name="homogeneous">True</property>
             <property name="layout_style">expand</property>
             <child>
               <object class="GtkButton">
-                <property name="label">gtk-close</property>
+                <property name="label">_Close</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="margin_left">5</property>
-                <property name="margin_right">5</property>
-                <property name="use_stock">True</property>
+                <property name="use_underline">True</property>
                 <signal name="clicked" handler="destroy" swapped="no"/>
               </object>
               <packing>
@@ -674,31 +675,12 @@
               </packing>
             </child>
             <child>
-              <object class="GtkButton" id="btn_save_cancel">
-                <property name="label">gtk-cancel</property>
-                <property name="visible">True</property>
-                <property name="can_focus">True</property>
-                <property name="receives_default">True</property>
-                <property name="margin_left">5</property>
-                <property name="margin_right">5</property>
-                <property name="use_stock">True</property>
-                <signal name="clicked" handler="on_btn_save_cancel_clicked" swapped="no"/>
-              </object>
-              <packing>
-                <property name="expand">True</property>
-                <property name="fill">True</property>
-                <property name="position">1</property>
-              </packing>
-            </child>
-            <child>
               <object class="GtkButton" id="btn_save">
-                <property name="label">gtk-save</property>
+                <property name="label">_Save</property>
                 <property name="visible">True</property>
                 <property name="can_focus">True</property>
                 <property name="receives_default">True</property>
-                <property name="margin_left">5</property>
-                <property name="margin_right">5</property>
-                <property name="use_stock">True</property>
+                <property name="use_underline">True</property>
                 <signal name="clicked" handler="on_btn_save_clicked" swapped="no"/>
               </object>
               <packing>

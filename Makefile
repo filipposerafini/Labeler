@@ -1,4 +1,4 @@
-TARGET = Labeller
+TARGET = Labeler
 CC = gcc
 CFLAGS = -g -rdynamic `pkg-config --cflags --libs opencv gtk+-3.0`
 SRC = $(wildcard src/*.c)
@@ -9,4 +9,4 @@ $(TARGET): $(SRC)
 	$(CC) -o $@ $^ $(CFLAGS)
 
 clean:
-	rm -f Labeller out/tmpfile
+	rm -f Labeler out/tmpfile

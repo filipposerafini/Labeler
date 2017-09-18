@@ -1,10 +1,11 @@
 #include "gui.h"
 
+// Add class row to classes list box
 void add_class_row(data *data, char *class_name, bool loaded) {
 
     // Get row from builder
     GtkBuilder *builder = gtk_builder_new();
-    gtk_builder_add_from_file(builder, "src/labeller.ui", NULL);
+    gtk_builder_add_from_file(builder, "src/labeler.ui", NULL);
     GtkListBoxRow *row = GTK_LIST_BOX_ROW(gtk_builder_get_object(builder, "class_row"));
     GtkLabel *label = GTK_LABEL(gtk_builder_get_object(builder, "class_label"));
     GtkButton *button = GTK_BUTTON(gtk_builder_get_object(builder, "btn_remove_class"));
@@ -16,6 +17,7 @@ void add_class_row(data *data, char *class_name, bool loaded) {
     g_object_unref(builder);
 }
 
+// Resize image
 void resize_image(GtkWidget *widget, GdkRectangle *rectangle, gpointer user_data) {
     data *data = user_data;
     if (data->img != NULL) {
@@ -23,9 +25,10 @@ void resize_image(GtkWidget *widget, GdkRectangle *rectangle, gpointer user_data
     }
 }
 
+// Show open dialog
 void show_open_dialog(GtkMenuItem *menu_item, gpointer user_data) {
     data *data = user_data;
-    g_debug("Showing open dialog\n");
+    g_debug("Showing open dialog");
     gtk_window_present(GTK_WINDOW(data->elements.open_dialog));
 }
 
@@ -47,6 +50,7 @@ void on_folder_chooser_file_set(GtkFileChooser *folder_chooser, gpointer user_da
     }
 }
 
+// Select file to load informations
 void on_file_chooser_file_set(GtkFileChooser *file_chooser, gpointer user_data) {
     data *data = user_data;
     char *p;
@@ -60,29 +64,9 @@ void on_file_chooser_file_set(GtkFileChooser *file_chooser, gpointer user_data) 
                 g_warning("File format incompatible. Select .csv file");
                 gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_open), FALSE);
             } else {
-                if ((file = fopen(data->selected_file, "r")) != NULL) {
-                    int num;
-                    char class[64];
-
-                    if (fscanf(file, "%d\n", &num) == EOF) {
-                        g_error("Error reading file %s", data->selected_file);
-                        exit(EXIT_FAILURE);
-                    }
-
-                    g_message("Reset classes");
-                    reset_classes(&data->labels);
-
-                    for (int i = 0; i < num; i++) {
-                        if (fscanf(file, "%s\n", class) == EOF) {
-                            g_error("Error reading file %s", data->selected_file);
-                            exit(EXIT_FAILURE);
-                        }
-                        g_message("New Class");
-                        if (add_class(class, &data->labels)) {
-                            add_class_row(data, class, true);
-                        }
-                    }
-
+                if (load_classes(data->selected_file, &data->labels)) {
+                    for (int i = 0; i < data->labels.classes_count; i++)
+                        add_class_row(data, data->labels.classes[i], true);
                     g_message("Selected file %s", data->selected_file);
 
                     gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_add_class), FALSE);
@@ -90,7 +74,7 @@ void on_file_chooser_file_set(GtkFileChooser *file_chooser, gpointer user_data) 
                     if (data->selected_folder != NULL)
                         gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_open), TRUE);
                 } else {
-                    g_warning("Error reading file %s", data->selected_file);
+                    g_error("Error reading file %s", data->selected_file);
                     data->selected_file = NULL;
                     gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_open), FALSE);
                 }
@@ -103,65 +87,63 @@ void on_file_chooser_file_set(GtkFileChooser *file_chooser, gpointer user_data) 
     }
 }
 
+// Add a new class
 void on_btn_add_class_clicked(GtkButton *button, gpointer user_data) {
     data *data = user_data;
-
     if (gtk_entry_get_text_length(data->elements.entry_class) > 0) {
         char *class_name = gtk_entry_get_text(data->elements.entry_class);
-
         // Try to add new class
         g_message("New Class");
         if (add_class(class_name, &data->labels)) {
-
             // Add class row to list box
             add_class_row(data, class_name, false);
-
             // Reset entry
             gtk_entry_set_text(data->elements.entry_class, "");
-
-            // Set open button sensitive
+            // Eventually enable open button and disable add class button 
             if (data->labels.classes_count > 0 && data->selected_folder != NULL)
                 gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_open), TRUE);
+            if (data->labels.classes_count == MAX_CLASSES)
+                gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_add_class), FALSE);
         }
         else
             g_warning("Class cannot be added");
     }
 }
 
+// Remove a specific class and destroy related widget
 void on_btn_remove_class_clicked(GtkButton *button, gpointer user_data) {
     data* data = user_data;
-
     // Get class to remove
     GtkBox *box = GTK_BOX(gtk_widget_get_parent(gtk_widget_get_parent(GTK_WIDGET(button)))); 
     GList *children = gtk_container_get_children(GTK_CONTAINER(box));
     char *class = gtk_label_get_text(GTK_LABEL(children->data));
     g_list_free(children);
-
     // Remove class
     int class_index = remove_class(class, &data->labels);
     if (class_index >= 0) {
         g_message("Removed class %d", class_index);
-
         // Destroy related widget
         gtk_widget_destroy(gtk_widget_get_parent(GTK_WIDGET(box)));
-
-        // Eventually disable open button
+        // Eventually disable open button and enable add class button
         if (data->labels.classes_count == 0)
             gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_open), FALSE);
+        if (data->labels.classes_count < MAX_CLASSES)
+            gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_add_class), TRUE);
     }
 }
 
+// Hide the open dialog window
 void on_btn_open_cancel_clicked(GtkButton *button, gpointer user_data) {
     data *data = user_data;
     g_debug("Hiding open dialog");
     gtk_widget_hide(data->elements.open_dialog);
 }
 
+// Start cycling image from selected folder
 void on_btn_open_clicked(GtkButton *button, gpointer user_data) {
     data *data = user_data;
     // Close previous dir
     closedir(data->dir);
-
     // Try to open selected directory
     if ((data->dir = opendir(data->selected_folder)) == NULL) {
         gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_open), FALSE);
@@ -173,6 +155,7 @@ void on_btn_open_clicked(GtkButton *button, gpointer user_data) {
         // Hide open dialog
         gtk_widget_hide(data->elements.open_dialog);
         g_message("Opening first image in %s", data->selected_folder);
+        // Open next image
         if (!open_next_image(data))
             g_warning("Selected directory has no image");
         else {
@@ -183,12 +166,9 @@ void on_btn_open_clicked(GtkButton *button, gpointer user_data) {
             gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_classes), TRUE);
             gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_next), TRUE);
             gtk_widget_set_sensitive(GTK_WIDGET(data->elements.event_box), TRUE);
-
-
-            // Repopulate it
+            // Populate classes menu item
             GtkAccelGroup *accel_group = gtk_accel_group_new();
             gtk_window_add_accel_group(GTK_WINDOW(data->elements.main_window), accel_group);
-
             GtkRadioMenuItem *group = NULL;
             for (int i = 0; i < data->labels.classes_count; i++) {
                 GtkWidget *mi_class = gtk_radio_menu_item_new_with_label_from_widget(group, data->labels.classes[i]);
@@ -202,12 +182,14 @@ void on_btn_open_clicked(GtkButton *button, gpointer user_data) {
     }
 }
 
+// Select a specific class
 void on_mi_class_activate(GtkMenuItem *menu_item, gpointer user_data) {
     labels *labels = user_data;
     for (int i = 0; i < labels->classes_count; i++) {
         if(!strcmp(gtk_menu_item_get_label(menu_item), labels->classes[i])) {
             labels->selected_class = i;
             g_message("Selected class %d", i);
+            // Change class of selected label
             if (labels->selected >= 0) {
                 labels->label[labels->selected].class = i;
                 g_message("Label %d -> Class changed to %d", labels->selected, i);
@@ -217,6 +199,7 @@ void on_mi_class_activate(GtkMenuItem *menu_item, gpointer user_data) {
     }
 }
 
+// Copy currently selected label
 void on_mi_copy_activate(GtkMenuItem *menu_item, gpointer user_data) {
     data *data = user_data;
     data->labels.copied = data->labels.selected;
@@ -224,6 +207,7 @@ void on_mi_copy_activate(GtkMenuItem *menu_item, gpointer user_data) {
     g_message("Label %d copied", data->labels.copied);
 }
 
+// Paste currently copied label
 void on_mi_paste_activate(GtkMenuItem *menu_item, gpointer user_data) {
     data *data = user_data;
     if (paste_label(&data->labels)) {
@@ -233,6 +217,7 @@ void on_mi_paste_activate(GtkMenuItem *menu_item, gpointer user_data) {
         g_warning("Label not pasted: too many labels");
 }
 
+// Delete currently selected label
 void on_mi_delete_activate(GtkMenuItem *menu_item, gpointer user_data) {
     data *data = user_data;
     if (delete_label(&data->labels))
@@ -245,6 +230,7 @@ void on_mi_delete_activate(GtkMenuItem *menu_item, gpointer user_data) {
     g_message("Deleted selected label");
 }
 
+// Reset labels for current image
 void on_mi_reset_activate(GtkMenuItem *menu_item, gpointer user_data) {
     data *data = user_data;
     reset(&data->labels);
@@ -256,6 +242,7 @@ void on_mi_reset_activate(GtkMenuItem *menu_item, gpointer user_data) {
     g_message("Image cleared");
 }
 
+// Print useful info to stdout
 void on_mi_print_activate(GtkMenuItem *menu_item, gpointer user_data) {
     data *data = user_data;
     debug_print(data->labels);
@@ -354,6 +341,7 @@ gboolean on_mouse_move_event(GtkWidget *image, GdkEvent *event, gpointer user_da
     }
 }
 
+// Try to open next image in working directory
 void on_btn_next_clicked(GtkButton *button, gpointer user_data) {
     data *data = user_data;
     save_labels(TMPFILE, data->name, data->labels);
@@ -371,25 +359,27 @@ void on_btn_next_clicked(GtkButton *button, gpointer user_data) {
     }
 }
 
+// Save data and reset workspace
 void on_mi_save_clicked(GtkMenuItem *menu_item, gpointer user_data) {
     data *data = user_data;
+    // Save
+    save_labels(TMPFILE, data->name, data->labels);
     save(TMPFILE, data->selected_folder);
+    // Force to open a new project (or quit)
+    gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_open), TRUE);
     gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_save), FALSE);
     gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_next), FALSE);
-    gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_classes), FALSE);
     gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_edit), FALSE);
-    gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_open), TRUE);
+    gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_classes), FALSE);
+    gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_open), FALSE);
     gtk_widget_set_sensitive(GTK_WIDGET(data->elements.event_box), FALSE);
-
-    // Reset cLasses
+    // Reset Classes
     reset_classes(&data->labels);
-
     // Destroy list box & classes menu children
     GList *children, *iter;
     children = gtk_container_get_children(GTK_CONTAINER(data->elements.class_list));
     for(iter = children; iter != NULL; iter = g_list_next(iter))
         gtk_widget_destroy(GTK_WIDGET(iter->data));
-
     children = gtk_container_get_children(GTK_CONTAINER(data->elements.menu_classes));
     for(iter = children; iter != NULL; iter = g_list_next(iter))
         gtk_widget_destroy(GTK_WIDGET(iter->data));
@@ -397,10 +387,11 @@ void on_mi_save_clicked(GtkMenuItem *menu_item, gpointer user_data) {
     g_list_free(iter);
 }
 
+// Show save dialog if any unsaved changes are present
 void show_save_dialog(GtkMenuItem *menu_item, gpointer user_data) {
     data *data = user_data;
     FILE *file;
-    g_debug("Showing save dialog\n");
+    g_debug("Showing save dialog");
     if ((file = fopen(TMPFILE, "r")) != NULL) {
         fclose(file);
         gtk_window_present(GTK_WINDOW(data->elements.save_dialog));
@@ -408,18 +399,20 @@ void show_save_dialog(GtkMenuItem *menu_item, gpointer user_data) {
         destroy(GTK_WINDOW(data->elements.main_window), data);
 }
 
-void on_btn_save_cancel_clicked(GtkButton *button, gpointer user_data) {
-    gui_elements *elements = user_data;
-    g_debug("Hiding save dialog");
-    gtk_widget_hide(elements->save_dialog);
-}
+//void on_btn_save_cancel_clicked(GtkButton *button, gpointer user_data) {
+    //gui_elements *elements = user_data;
+    //g_debug("Hiding save dialog");
+    //gtk_widget_hide(elements->save_dialog);
+//}
 
+// Save data and calls destroy function
 void on_btn_save_clicked(GtkButton *button, gpointer user_data) {
     data *data = user_data;
     save(TMPFILE, data->selected_folder);
     destroy(GTK_WINDOW(data->elements.main_window), data);
 }
 
+// Free all allocated memory and destroy all windows
 void destroy(GtkWindow *self, gpointer user_data) {
     data *data = user_data;
     if (data->img != NULL)

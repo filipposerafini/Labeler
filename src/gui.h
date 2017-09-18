@@ -21,7 +21,7 @@
 #define TMPFILE "out/.tmpfile"
 
 /**
- * Stuct that contains all gui elements
+ * Stores all GUI elements to interact with
  */
 typedef struct {
     GtkWidget *main_window;
@@ -50,16 +50,16 @@ typedef struct {
 } gui_elements;
 
 /**
- * Struct that contains all data used by the program
+ * Stores all data used by the program
  */
 typedef struct {
     gui_elements elements;      /**< User interface elements */
 	labels labels;              /**< Labels struct */
     gchar *selected_folder;     /**< Currently selected source folder */
     gchar *selected_file;       /**< Currently selected source file */
-    DIR *dir;                   /**< DIR struct of currenty selected source folder*/
-    char *name;                 /**< Image name */
-    IplImage *img;              /**< Current image */
+    DIR *dir;                   /**< DIR struct of currenty selected source folder */
+    char *name;                 /**< Current image name */
+    IplImage *img;              /**< Current image struct */
     IplImage *tmp;              /**< Temporary image */
     CvPoint corner;             /**< Currently drawing label corner point */
     CvPoint opposite_corner;    /**< Currently drawing label opposite_corner point */
@@ -84,7 +84,7 @@ void show_image(IplImage *img, GtkImage *image, GtkWidget *widget);
 /**
  * Open next image in selected directory.
  * Search for the next valid image in selected directory accepting only .jpg/.png files,
- * and show it calling show_image().
+ * and shows it calling show_image().
  *
  * @param data
  *
@@ -94,7 +94,7 @@ bool open_next_image(data *data);
 
 /**
  * Update image content.
- * Refresh the image redrawing all the labels, and show it calling show_image().
+ * Refresh the image redrawing all the labels, and shows it calling show_image().
  *
  * @param data
  */

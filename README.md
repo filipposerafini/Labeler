@@ -1,5 +1,5 @@
-# LABELLER
-Tool per il labeling di immagini per Deep-Learning
+# LABELER
+Software per il labeling di immagini di training per algoritmi di deep-learning
 
 
 ## Installation
