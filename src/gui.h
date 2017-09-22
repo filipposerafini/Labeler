@@ -59,7 +59,9 @@ typedef struct {
 	labels labels;              /**< Labels struct */
     gchar *selected_folder;     /**< Currently selected source folder */
     gchar *selected_file;       /**< Currently selected source file */
-    DIR *dir;                   /**< DIR struct of currenty selected source folder */
+    struct dirent **dirlist;           /**< Dirent struct array of currenty selected source folder content*/
+    int dir_count;              /**< Dirlist logical dimention */ 
+    int dir_position;           /**< Current position in the array */
     char *name;                 /**< Current image name */
     IplImage *img;              /**< Current image struct */
     IplImage *tmp;              /**< Temporary image */

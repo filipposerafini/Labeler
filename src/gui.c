@@ -11,8 +11,10 @@ void init_data(data *data, GtkBuilder *builder) {
     data->tmp = NULL;
     data->selected_file = NULL;
     data->selected_folder = NULL;
-    data->dir = NULL;
+    data->dirlist = NULL;
     data->name = NULL;
+    data->dir_count = 0;
+    data->dir_position = -1;
 }
 
 // Initialize all elements in 'elements'
@@ -71,14 +73,19 @@ void show_image(IplImage *img, GtkImage *image, GtkWidget *widget) {
 // Open and show next image in current directory, accepting only .jpg/.png formats.
 // Returns true on success, false when there isn't any other valid image in current directory
 bool open_next_image(data *data) {
-    struct dirent *dd;
+    struct dirent *dd = NULL;
     char *p, *src_img;
 
     // Cycle through directory looking for valid image
-    while ((dd = readdir(data->dir)) != NULL) {
+    while (data->dir_position < data->dir_count - 1) {
+        if (data->dir_position >= 0)
+            free(data->dirlist[data->dir_position]);
+        data->dir_position++;
+        dd = data->dirlist[data->dir_position];
         // Check if filename contains '.'
         if ((p = strrchr(dd->d_name, '.')) == NULL) {
             g_debug("Skipped file: %s", dd->d_name);
+            dd = NULL;
             continue;
         }
         else {
@@ -94,6 +101,7 @@ bool open_next_image(data *data) {
             }
             else {
                 g_debug("Skipped file: %s", dd->d_name);
+                dd = NULL;
                 continue;
             }
         }

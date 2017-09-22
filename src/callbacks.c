@@ -143,18 +143,21 @@ void on_btn_open_cancel_clicked(GtkButton *button, gpointer user_data) {
 // Start cycling image from selected folder
 void on_btn_open_clicked(GtkButton *button, gpointer user_data) {
     data *data = user_data;
-    // Close previous dir
-    closedir(data->dir);
+    DIR *dir;
+    // Reset dir position
+    data->dir_position = -1;
     // Try to open selected directory
-    if ((data->dir = opendir(data->selected_folder)) == NULL) {
+    if ((dir = opendir(data->selected_folder)) == NULL) {
         gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_open), FALSE);
         gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_next), FALSE);
         g_critical("Failed to open %s. Please select another folder", data->selected_folder);
     } else {
+        closedir(dir);
         // Initialize labels
         reset(&data->labels);
         // Hide open dialog
         gtk_widget_hide(data->elements.open_dialog);
+        data->dir_count = scandir(data->selected_folder, &data->dirlist, NULL, alphasort);
         g_message("Opening first image in %s", data->selected_folder);
         // Open next image
         if (!open_next_image(data))
@@ -491,7 +494,7 @@ void destroy(GtkWindow *self, gpointer user_data) {
         cvReleaseImage(&data->img);
     if (data->tmp != NULL)
         cvReleaseImage(&data->tmp);
-    closedir(data->dir);
+    free(data->dirlist);
     g_free(data->selected_folder);
     free(data->name);
     FILE *file;
