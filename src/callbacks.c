@@ -32,6 +32,7 @@ void show_open_dialog(GtkMenuItem *menu_item, gpointer user_data) {
     gtk_window_present(GTK_WINDOW(data->elements.open_dialog));
 }
 
+// Select image source folder
 void on_folder_chooser_file_set(GtkFileChooser *folder_chooser, gpointer user_data) {
     data *data = user_data;
     DIR *dir;
@@ -164,6 +165,8 @@ void on_btn_open_clicked(GtkButton *button, gpointer user_data) {
             gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_save), TRUE);
             gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_edit), TRUE);
             gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_classes), TRUE);
+            gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_view), TRUE);
+            gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_print), TRUE);
             gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_next), TRUE);
             gtk_widget_set_sensitive(GTK_WIDGET(data->elements.event_box), TRUE);
             // Populate classes menu item
@@ -199,6 +202,34 @@ void on_mi_class_activate(GtkMenuItem *menu_item, gpointer user_data) {
     }
 }
 
+// Move up currently selected label
+void on_mi_up_activate(GtkMenuItem *menu_item, gpointer user_data) {
+    data *data = user_data;
+    data->labels.label[data->labels.selected].center.y--;
+    update_image(data);
+}
+
+// Move down currently selected label
+void on_mi_down_activate(GtkMenuItem *menu_item, gpointer user_data) {
+    data *data = user_data;
+    data->labels.label[data->labels.selected].center.y++;
+    update_image(data);
+}
+
+// Move left currently selected label
+void on_mi_left_activate(GtkMenuItem *menu_item, gpointer user_data) {
+    data *data = user_data;
+    data->labels.label[data->labels.selected].center.x--;
+    update_image(data);
+}
+
+// Move right currently selected label
+void on_mi_right_activate(GtkMenuItem *menu_item, gpointer user_data) {
+    data *data = user_data;
+    data->labels.label[data->labels.selected].center.x++;
+    update_image(data);
+}
+
 // Copy currently selected label
 void on_mi_copy_activate(GtkMenuItem *menu_item, gpointer user_data) {
     data *data = user_data;
@@ -224,9 +255,12 @@ void on_mi_delete_activate(GtkMenuItem *menu_item, gpointer user_data) {
         gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_paste), FALSE);
     update_image(data);
     gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_copy), FALSE);
+    gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_move), FALSE);
     gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_delete), FALSE);
-    if (data->labels.count == 0)
+    if (data->labels.count == 0) {
         gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_reset), FALSE);
+        gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_print), FALSE);
+    }
     g_message("Deleted selected label");
 }
 
@@ -236,9 +270,11 @@ void on_mi_reset_activate(GtkMenuItem *menu_item, gpointer user_data) {
     reset(&data->labels);
     update_image(data);
     gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_copy), FALSE);
+    gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_move), FALSE);
     gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_paste), FALSE);
     gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_delete), FALSE);
     gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_reset), FALSE);
+    gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_print), FALSE);
     g_message("Image cleared");
 }
 
@@ -280,9 +316,11 @@ gboolean on_button_press_event(GtkWidget *image, GdkEvent *event, gpointer user_
             data->moving = true;
             g_message("Selected label %d", data->labels.selected);
             gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_copy), TRUE);
+            gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_move), TRUE);
             gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_delete), TRUE);
         } else {
             gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_copy), FALSE);
+            gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_move), FALSE);
             gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_delete), FALSE);
         }
     }
@@ -313,8 +351,10 @@ gboolean on_button_release_event(GtkWidget *image, GdkEvent *event, gpointer use
                 update_image(data);
             } else
                 g_warning("Label not saved: Too many labels");
-            if (data->labels.count == 1)
+            if (data->labels.count == 1) {
                 gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_reset), TRUE);
+                gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_print), TRUE);
+            }
         }
     }
     // Right mouse button
@@ -354,6 +394,7 @@ void on_btn_next_clicked(GtkButton *button, gpointer user_data) {
         update_image(data);
         gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_reset), FALSE);
         gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_copy), FALSE);
+        gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_move), FALSE);
         gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_paste), FALSE);
         gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_delete), FALSE);
     }
@@ -362,29 +403,60 @@ void on_btn_next_clicked(GtkButton *button, gpointer user_data) {
 // Save data and reset workspace
 void on_mi_save_clicked(GtkMenuItem *menu_item, gpointer user_data) {
     data *data = user_data;
-    // Save
-    save_labels(TMPFILE, data->name, data->labels);
-    save(TMPFILE, data->selected_folder);
-    // Force to open a new project (or quit)
-    gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_open), TRUE);
-    gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_save), FALSE);
-    gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_next), FALSE);
-    gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_edit), FALSE);
-    gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_classes), FALSE);
-    gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_open), FALSE);
-    gtk_widget_set_sensitive(GTK_WIDGET(data->elements.event_box), FALSE);
-    // Reset Classes
-    reset_classes(&data->labels);
-    // Destroy list box & classes menu children
-    GList *children, *iter;
-    children = gtk_container_get_children(GTK_CONTAINER(data->elements.class_list));
-    for(iter = children; iter != NULL; iter = g_list_next(iter))
-        gtk_widget_destroy(GTK_WIDGET(iter->data));
-    children = gtk_container_get_children(GTK_CONTAINER(data->elements.menu_classes));
-    for(iter = children; iter != NULL; iter = g_list_next(iter))
-        gtk_widget_destroy(GTK_WIDGET(iter->data));
-    g_list_free(children);
-    g_list_free(iter);
+    
+    GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_SAVE;
+
+    GtkWidget *dialog = gtk_file_chooser_dialog_new("Labeler - Save",
+            GTK_WINDOW(data->elements.main_window),
+            action,
+            "_Cancel",
+            GTK_RESPONSE_CANCEL,
+            "_Save",
+            GTK_RESPONSE_ACCEPT,
+            NULL);
+    GtkFileChooser *chooser = GTK_FILE_CHOOSER(dialog);
+    char *foldername = strrchr(data->selected_folder, '/') + 1;
+    char *p = (char*)malloc(sizeof(foldername) + 4);
+    sprintf(p, "%s.csv", foldername);
+    gtk_file_chooser_set_current_name(chooser, p);
+    free(p);
+
+    gtk_file_chooser_set_do_overwrite_confirmation(chooser, TRUE);
+
+    if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
+        char *filename;
+        filename = gtk_file_chooser_get_filename(chooser);
+        
+        // Save
+        save_labels(TMPFILE, data->name, data->labels);
+        save(TMPFILE, filename);
+        free(filename);
+        
+        // Reset Classes
+        reset_classes(&data->labels);
+        
+        // Force to open a new project (or quit)
+        gtk_widget_set_sensitive(GTK_WIDGET(data->elements.event_box), FALSE);
+        gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_open), TRUE);
+        gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_save), FALSE);
+        gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_next), FALSE);
+        gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_edit), FALSE);
+        gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_view), FALSE);
+        gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_classes), FALSE);
+        gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_open), FALSE);
+
+        // Destroy list box & classes menu children
+        GList *children, *iter;
+        children = gtk_container_get_children(GTK_CONTAINER(data->elements.class_list));
+        for(iter = children; iter != NULL; iter = g_list_next(iter))
+            gtk_widget_destroy(GTK_WIDGET(iter->data));
+        children = gtk_container_get_children(GTK_CONTAINER(data->elements.menu_classes));
+        for(iter = children; iter != NULL; iter = g_list_next(iter))
+            gtk_widget_destroy(GTK_WIDGET(iter->data));
+        g_list_free(children);
+        g_list_free(iter);
+    }
+    gtk_widget_destroy (dialog);
 }
 
 // Show save dialog if any unsaved changes are present
@@ -399,18 +471,13 @@ void show_save_dialog(GtkMenuItem *menu_item, gpointer user_data) {
         destroy(GTK_WINDOW(data->elements.main_window), data);
 }
 
-//void on_btn_save_cancel_clicked(GtkButton *button, gpointer user_data) {
-    //gui_elements *elements = user_data;
-    //g_debug("Hiding save dialog");
-    //gtk_widget_hide(elements->save_dialog);
-//}
-
 // Save data and calls destroy function
-void on_btn_save_clicked(GtkButton *button, gpointer user_data) {
-    data *data = user_data;
-    save(TMPFILE, data->selected_folder);
-    destroy(GTK_WINDOW(data->elements.main_window), data);
-}
+/*void on_btn_save_clicked(GtkButton *button, gpointer user_data) {*/
+    /*data *data = user_data;*/
+    /*show_save_file_dialog(data);*/
+    /*[>save(TMPFILE, data->selected_folder);<]*/
+    /*destroy(GTK_WINDOW(data->elements.main_window), data);*/
+/*}*/
 
 // Free all allocated memory and destroy all windows
 void destroy(GtkWindow *self, gpointer user_data) {

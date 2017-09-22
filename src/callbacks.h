@@ -15,6 +15,10 @@ void on_btn_open_cancel_clicked(GtkButton *button, gpointer user_data);
 void on_btn_open_clicked(GtkButton *button, gpointer user_data);
 
 void on_mi_class_activate(GtkMenuItem *menu_item, gpointer user_data);
+void on_mi_up_activate(GtkMenuItem *menu_item, gpointer user_data);
+void on_mi_down_activate(GtkMenuItem *menu_item, gpointer user_data);
+void on_mi_left_activate(GtkMenuItem *menu_item, gpointer user_data);
+void on_mi_right_activate(GtkMenuItem *menu_item, gpointer user_data);
 void on_mi_copy_activate(GtkMenuItem *menu_item, gpointer user_data);
 void on_mi_paste_activate(GtkMenuItem *menu_item, gpointer user_data);
 void on_mi_delete_activate(GtkMenuItem *menu_item, gpointer user_data);

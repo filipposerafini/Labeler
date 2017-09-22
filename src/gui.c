@@ -22,11 +22,13 @@ void init_gui_elements(gui_elements *elements, GtkBuilder *builder) {
     elements->mi_save = GTK_MENU_ITEM(gtk_builder_get_object(builder, "mi_save"));
     elements->mi_reset = GTK_MENU_ITEM(gtk_builder_get_object(builder, "mi_reset"));
     elements->mi_edit = GTK_MENU_ITEM(gtk_builder_get_object(builder, "mi_edit"));
+    elements->mi_move = GTK_MENU_ITEM(gtk_builder_get_object(builder, "mi_move"));
     elements->mi_copy = GTK_MENU_ITEM(gtk_builder_get_object(builder, "mi_copy"));
     elements->mi_paste = GTK_MENU_ITEM(gtk_builder_get_object(builder, "mi_paste"));
     elements->mi_delete = GTK_MENU_ITEM(gtk_builder_get_object(builder, "mi_delete"));
     elements->mi_classes = GTK_MENU_ITEM(gtk_builder_get_object(builder, "mi_classes"));
     elements->menu_classes = GTK_MENU(gtk_builder_get_object(builder, "menu_classes"));
+    elements->mi_view = GTK_MENU_ITEM(gtk_builder_get_object(builder, "mi_view"));
     elements->mi_print = GTK_MENU_ITEM(gtk_builder_get_object(builder, "mi_print"));
     elements->event_box = GTK_WIDGET(gtk_builder_get_object(builder, "event_box"));
     elements->image = GTK_IMAGE(gtk_builder_get_object(builder, "image"));
@@ -172,26 +174,17 @@ bool convert_coordinates(float pointer_x, float pointer_y, GtkWidget *widget, in
 
 // Create a folder in out/ named 'folder_name' and place in it a .csv file
 // with all label imformations
-void save(char *tmpfile, char *folder_name) {
+void save(char *tmpfile, char *filename) {
     FILE *file;
-    char *p = strrchr(folder_name, '/');
-    char *destfolder = (char*)malloc(strlen(++p) + 5);
-    sprintf(destfolder, "out/%s",p);
-    char *outfile = (char*)malloc(strlen(destfolder) + strlen(p) + 5);
-    sprintf(outfile, "%s/%s.csv", destfolder, p);
     if ((file = fopen(tmpfile, "r")) != NULL) {
         fclose(file);
 
-        // Create destination folder
-        if (mkdir(destfolder, 0755) == 0)
-            g_message("Created folder %s", destfolder);
         // Rename tempfile that becomes the outfile
-        if (rename(tmpfile, outfile) != 0) {
+        if (rename(tmpfile, filename) != 0) {
             g_error("Error renaming the temporary file\n");
             exit(EXIT_FAILURE);
         } else
-            g_message("%s saved correctly", outfile);
+            g_message("%s saved correctly", filename);
     }
-    free(destfolder);
-    free(outfile);
 }
+

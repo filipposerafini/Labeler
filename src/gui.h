@@ -30,11 +30,13 @@ typedef struct {
     GtkMenuItem *mi_reset;
     GtkMenuItem *mi_quit;
     GtkMenuItem *mi_edit;
+    GtkMenuItem *mi_move;
     GtkMenuItem *mi_copy;
     GtkMenuItem *mi_paste;
     GtkMenuItem *mi_delete;
     GtkMenuItem *mi_classes;
     GtkMenu *menu_classes;
+    GtkMenuItem *mi_view;
     GtkMenuItem *mi_print;
     GtkWidget *event_box;
     GtkImage *image;
