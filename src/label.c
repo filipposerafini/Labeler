@@ -1,4 +1,4 @@
-#include "Label.h"
+#include "label.h"
 
 // Save a new label with given arguments in 'labels'
 // Return true in case of success and false when labels array is full
@@ -19,7 +19,8 @@ bool create_label(labels *labels, CvPoint center, int width, int height, int cla
 // If 'fill' is true the rectangle has a transparent background with alpha='ALPHA'
 void draw_label(IplImage *image, CvPoint corner1, CvPoint corner2, CvScalar color, bool fill) {
     if (fill) {
-        IplImage *rect = cvCreateImage(cvSize(image->width, image->height),image->depth, image->nChannels);
+        IplImage *rect = cvCreateImage(cvSize(image->width, image->height),
+                image->depth, image->nChannels);
         cvCopy(image, rect, NULL);
         cvRectangle(rect, corner1, corner2, color, CV_FILLED, 8, 0);
         cvAddWeighted(rect, ALPHA, image, 1 - ALPHA, 0, image);

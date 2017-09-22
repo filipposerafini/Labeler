@@ -7,7 +7,7 @@
 #ifndef GUI_H
 #define GUI_H
 
-#include "Label.h"
+#include "label.h"
 #include <gtk/gtk.h>
 #include <gdk-pixbuf/gdk-pixbuf.h>
 #include <gdk/gdkkeysyms.h>
@@ -125,34 +125,5 @@ bool convert_coordinates(float pointer_x, float pointer_y, GtkWidget *widget, in
  * @param folder_name Selected folder
  */
 void save(char *tmpfile, char *folder_name);
-
-// CALLBACKS
-void resize_image(GtkWidget *widget, GdkRectangle *rectangle, gpointer user_data);
-
-void show_open_dialog(GtkMenuItem *image_menu_item, gpointer user_data);
-void on_folder_chooser_file_set(GtkFileChooser *file_chooser, gpointer user_data);
-void on_file_chooser_file_set(GtkFileChooser *file_chooser, gpointer user_data);
-void on_btn_add_class_clicked(GtkButton *button, gpointer user_data);
-void on_btn_remove_class_clicked(GtkButton *button, gpointer user_data);
-void on_btn_open_cancel_clicked(GtkButton *button, gpointer user_data);
-void on_btn_open_clicked(GtkButton *button, gpointer user_data);
-
-void on_mi_class_activate(GtkMenuItem *menu_item, gpointer user_data);
-void on_mi_copy_activate(GtkMenuItem *menu_item, gpointer user_data);
-void on_mi_paste_activate(GtkMenuItem *menu_item, gpointer user_data);
-void on_mi_delete_activate(GtkMenuItem *menu_item, gpointer user_data);
-void on_mi_reset_activate(GtkMenuItem *menu_item, gpointer user_data);
-void on_mi_print_activate(GtkMenuItem *menu_item, gpointer user_data);
-
-gboolean on_button_press_event(GtkWidget *image, GdkEvent *event, gpointer user_data);
-gboolean on_button_press_event(GtkWidget *image, GdkEvent *event, gpointer user_data);
-gboolean on_mouse_move_event(GtkWidget *image, GdkEvent *event, gpointer user_data);
-
-void on_btn_next_clicked(GtkButton *button, gpointer user_data);
-
-void show_save_dialog(GtkMenuItem *menu_item, gpointer user_data);
-void on_btn_save_cancel_clicked(GtkButton *button, gpointer user_data);
-void on_btn_save_clicked(GtkButton *button, gpointer user_data);
-void destroy(GtkWindow *window, gpointer pointer);
 
 #endif

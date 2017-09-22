@@ -1,5 +1,5 @@
 /**
- * @file Label.h
+ * @file label.h
  * @brief Label managment header File
  * @author Filippo Serafini
  */

@@ -1,4 +1,4 @@
-#include "gui.h"
+#include "callbacks.h"
 
 // Add class row to classes list box
 void add_class_row(data *data, char *class_name, bool loaded) {

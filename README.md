@@ -8,4 +8,4 @@ Requierements:
 * [GTK+](https://www.gtk.org/)
 * [OpenCV](http://opencv.org/)
 
-To compile run `make`
+To compile in unix run `make`
