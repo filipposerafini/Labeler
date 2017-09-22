@@ -179,12 +179,22 @@ void save(char *tmpfile, char *filename) {
     if ((file = fopen(tmpfile, "r")) != NULL) {
         fclose(file);
 
+        char *file;
+        char *p = strrchr(filename, '.');
+        if (p != NULL && !strcmp(p, ".csv"))
+            file = filename;
+        else
+        {
+            file = (char*)malloc(sizeof(filename) + 4);
+            sprintf(file, "%s.csv", filename);
+        }
+
         // Rename tempfile that becomes the outfile
-        if (rename(tmpfile, filename) != 0) {
+        if (rename(tmpfile, file) != 0) {
             g_error("Error renaming the temporary file\n");
             exit(EXIT_FAILURE);
         } else
-            g_message("%s saved correctly", filename);
+            g_message("%s saved correctly", file);
     }
 }
 

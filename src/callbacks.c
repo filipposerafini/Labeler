@@ -423,6 +423,11 @@ void on_mi_save_clicked(GtkMenuItem *menu_item, gpointer user_data) {
 
     gtk_file_chooser_set_do_overwrite_confirmation(chooser, TRUE);
 
+    GtkFileFilter *filter = gtk_file_filter_new();
+    gtk_file_filter_set_name(filter, "Labeler Output");
+    gtk_file_filter_add_pattern(filter, "*.csv");
+    gtk_file_chooser_add_filter(chooser, filter);
+
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
         char *filename;
         filename = gtk_file_chooser_get_filename(chooser);
@@ -456,7 +461,7 @@ void on_mi_save_clicked(GtkMenuItem *menu_item, gpointer user_data) {
         g_list_free(children);
         g_list_free(iter);
     }
-    gtk_widget_destroy (dialog);
+    gtk_widget_destroy(dialog);
 }
 
 // Show save dialog if any unsaved changes are present
