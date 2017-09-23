@@ -52,7 +52,8 @@ CvScalar select_color(int index) {
 // Check if a point of coorinates 'x', 'y' is the inside the label 'label'
 // Retrun true if the point is inside the label, false otherwise
 bool over_label(int x, int y, label label) {
-    return ((x >= label.center.x - label.width && x <= label.center.x + label.width) && (y >= label.center.y - label.height && y <= label.center.y + label.height));
+    return ((x >= label.center.x - label.width && x <= label.center.x + label.width) &&
+            (y >= label.center.y - label.height && y <= label.center.y + label.height));
 }
 
 // Check if a point of coordinates 'x', 'y' is inside any a label in 'labels',
@@ -110,7 +111,8 @@ void reset(labels *labels) {
 // Print informations about label 'label':
 // Center coordinates (x,y), width and height
 void print_label(label label) {
-    printf("Center: %dx%d, width: %d, height: %d, class: %d\n", label.center.x, label.center.y, label.width, label.height, label.class);
+    printf("Center: %dx%d, width: %d, height: %d, class: %d\n", label.center.x, 
+            label.center.y, label.width, label.height, label.class);
 }
 
 // Print information for every element in 'labels',
@@ -160,7 +162,9 @@ void save_labels(char *filename, char *imagename, labels src) {
         }
         // Write labels to file
         for (int i = 0; i < src.count; i++)
-            fprintf(file, "%s;%d;%d;%d;%d;%d\n", imagename, src.label[i].center.x, src.label[i].center.y, src.label[i].width, src.label[i].height, src.label[i].class);
+            fprintf(file, "%s;%d;%d;%d;%d;%d\n", imagename, src.label[i].center.x, 
+                    src.label[i].center.y, src.label[i].width, src.label[i].height, 
+                    src.label[i].class);
         fclose(file);
     }
 }
@@ -177,20 +181,17 @@ void load_labels(char *filename, char *imagename, labels *dest) {
         printf("Could not open file %s\n", filename);
         exit(EXIT_FAILURE);
     }
-
     // Skip classes lines
     if (fscanf(file, "%d\n", &num) == EOF) {
         fclose(file);
         return;
     }
-
     for (int i = 0; i < num; i++) {
         if (fscanf(file, "%s\n", class) == EOF) {
             fclose(file);
             return;
         }
     }
-
     // Read line
     while (fscanf(file, "%[^;];%d;%d;%d;%d;%d\n", name, &x, &y, &w, &h, &c) != EOF) {
         if (!strcmp(name, imagename)) {
@@ -202,7 +203,6 @@ void load_labels(char *filename, char *imagename, labels *dest) {
                 printf("Label not loaded: too many labels\n");
         }
     }
-
     fclose(file);
 }
 

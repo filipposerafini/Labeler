@@ -54,6 +54,7 @@ void show_image(IplImage *img, GtkImage *image, GtkWidget *widget) {
     GtkAllocation allocation;
     gtk_widget_get_allocation(widget, &allocation);
 
+    // Scale pixbuf to fit in container
     if (width > (allocation.width - 10)) {
         ratio = ((float)allocation.width - 10) / width;
         width = width * ratio;
@@ -64,7 +65,6 @@ void show_image(IplImage *img, GtkImage *image, GtkWidget *widget) {
         width = width * ratio;
         height = height * ratio;
     }
-    // Scale pixbuf to fit in container
     pixbuf = gdk_pixbuf_scale_simple(pixbuf, width, height, GDK_INTERP_BILINEAR);
     gtk_image_set_from_pixbuf(image, pixbuf);
     g_object_unref(pixbuf);
@@ -80,30 +80,22 @@ bool open_next_image(data *data) {
     while (data->dir_position < data->dir_count - 1) {
         if (data->dir_position >= 0)
             free(data->dirlist[data->dir_position]);
+        // Move to next dirent
         data->dir_position++;
         dd = data->dirlist[data->dir_position];
-        // Check if filename contains '.'
-        if ((p = strrchr(dd->d_name, '.')) == NULL) {
+        src_img = (char*)malloc(strlen(dd->d_name) + strlen(data->selected_folder) + 2);
+        sprintf(src_img, "%s/%s", data->selected_folder, dd->d_name);
+        IplImage *test = cvLoadImage(src_img, CV_LOAD_IMAGE_COLOR);
+        // Check if is valid image
+        if (test != NULL) {
+            cvReleaseImage(&test);
+            g_message("Opening file: %s", dd->d_name);
+            break;
+        }
+        else {
             g_debug("Skipped file: %s", dd->d_name);
             dd = NULL;
             continue;
-        }
-        else {
-            // Check file format
-            if (!strcmp(p, ".jpg") || !strcmp(p, ".JPG") || !strcmp(p, ".png") || !strcmp(p, ".PNG")) {
-                data->name = (char*)realloc(data->name, strlen(dd->d_name) - 3);
-                strncpy(data->name, dd->d_name, strlen(dd->d_name) - 4);
-                data->name[strlen(dd->d_name) - 4] = '\0';
-                src_img = (char*)malloc(strlen(dd->d_name) + strlen(data->selected_folder) + 2);
-                sprintf(src_img, "%s/%s", data->selected_folder, dd->d_name);
-                g_message("Opening file: %s", data->name);
-                break;
-            }
-            else {
-                g_debug("Skipped file: %s", dd->d_name);
-                dd = NULL;
-                continue;
-            }
         }
     }
 
@@ -111,25 +103,25 @@ bool open_next_image(data *data) {
         // No valid image found
         return false;
     else {
+        // Handle file name
+        data->name = (char*)realloc(data->name, strlen(dd->d_name) - 3);
+        strncpy(data->name, dd->d_name, strlen(dd->d_name) - 4);
+        data->name[strlen(dd->d_name) - 4] = '\0';
         // Release previous img allocation
         if (data->img != NULL)
             cvReleaseImage(&data->img);
         // Re-initialize labels informations
         reset(&data->labels);
         // Load new image
-        data->img = cvLoadImage(src_img, CV_LOAD_IMAGE_COLOR);
-        if (!data->img) {
-            g_error("Failed to load image %s", src_img);
-            exit(EXIT_FAILURE);
-        }
+        data->img = cvLoadImage(src_img, CV_LOAD_IMAGE_COLOR); 
         // Release previous tmp allocation
         if (data->tmp != NULL)
             cvReleaseImage(&data->tmp);
         data->tmp = cvCreateImage(cvSize(data->img->width, data->img->height), data->img->depth, data->img->nChannels);
         // Convert from BGR (opencv) to RGB (gtk)
         cvCvtColor(data->img, data->img, CV_BGR2RGB);
+        // Load labels from file
         if (data->selected_file != NULL)
-            // Load labels from file
             load_labels(data->selected_file, data->name, &data->labels);
         free(src_img);
         return true;
@@ -180,13 +172,12 @@ bool convert_coordinates(float pointer_x, float pointer_y, GtkWidget *widget, in
         return true;
 }
 
-// Create a folder in out/ named 'folder_name' and place in it a .csv file
-// with all label imformations
+// Rename 'tmpfile' to 'filename'
 void save(char *tmpfile, char *filename) {
     FILE *file;
     if ((file = fopen(tmpfile, "r")) != NULL) {
         fclose(file);
-
+        // File will have '.csv' extension
         char *file;
         char *p = strrchr(filename, '.');
         if (p != NULL && !strcmp(p, ".csv"))
@@ -196,8 +187,7 @@ void save(char *tmpfile, char *filename) {
             file = (char*)malloc(sizeof(filename) + 4);
             sprintf(file, "%s.csv", filename);
         }
-
-        // Rename tempfile that becomes the outfile
+        // Rename tempfile that becomes the output file
         if (rename(tmpfile, file) != 0) {
             g_error("Error renaming the temporary file\n");
             exit(EXIT_FAILURE);

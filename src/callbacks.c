@@ -65,13 +65,12 @@ void on_file_chooser_file_set(GtkFileChooser *file_chooser, gpointer user_data) 
                 g_warning("File format incompatible. Select .csv file");
                 gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_open), FALSE);
             } else {
+                // Load classes
                 if (load_classes(data->selected_file, &data->labels)) {
                     for (int i = 0; i < data->labels.classes_count; i++)
                         add_class_row(data, data->labels.classes[i], true);
                     g_message("Selected file %s", data->selected_file);
-
                     gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_add_class), FALSE);
-
                     if (data->selected_folder != NULL)
                         gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_open), TRUE);
                 } else {
@@ -406,9 +405,8 @@ void on_btn_next_clicked(GtkButton *button, gpointer user_data) {
 // Save data and reset workspace
 void on_mi_save_clicked(GtkMenuItem *menu_item, gpointer user_data) {
     data *data = user_data;
-    
+    // Open file chooser dialog
     GtkFileChooserAction action = GTK_FILE_CHOOSER_ACTION_SAVE;
-
     GtkWidget *dialog = gtk_file_chooser_dialog_new("Labeler - Save",
             GTK_WINDOW(data->elements.main_window),
             action,
@@ -430,19 +428,16 @@ void on_mi_save_clicked(GtkMenuItem *menu_item, gpointer user_data) {
     gtk_file_filter_set_name(filter, "Labeler Output");
     gtk_file_filter_add_pattern(filter, "*.csv");
     gtk_file_chooser_add_filter(chooser, filter);
-
+    // Check dialog result
     if (gtk_dialog_run(GTK_DIALOG(dialog)) == GTK_RESPONSE_ACCEPT) {
         char *filename;
         filename = gtk_file_chooser_get_filename(chooser);
-        
         // Save
         save_labels(TMPFILE, data->name, data->labels);
         save(TMPFILE, filename);
         free(filename);
-        
         // Reset Classes
         reset_classes(&data->labels);
-        
         // Force to open a new project (or quit)
         gtk_widget_set_sensitive(GTK_WIDGET(data->elements.event_box), FALSE);
         gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_open), TRUE);
@@ -452,7 +447,6 @@ void on_mi_save_clicked(GtkMenuItem *menu_item, gpointer user_data) {
         gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_view), FALSE);
         gtk_widget_set_sensitive(GTK_WIDGET(data->elements.mi_classes), FALSE);
         gtk_widget_set_sensitive(GTK_WIDGET(data->elements.btn_open), FALSE);
-
         // Destroy list box & classes menu children
         GList *children, *iter;
         children = gtk_container_get_children(GTK_CONTAINER(data->elements.class_list));
@@ -480,12 +474,11 @@ void show_save_dialog(GtkMenuItem *menu_item, gpointer user_data) {
 }
 
 // Save data and calls destroy function
-/*void on_btn_save_clicked(GtkButton *button, gpointer user_data) {*/
-    /*data *data = user_data;*/
-    /*show_save_file_dialog(data);*/
-    /*[>save(TMPFILE, data->selected_folder);<]*/
-    /*destroy(GTK_WINDOW(data->elements.main_window), data);*/
-/*}*/
+void on_btn_save_clicked(GtkButton *button, gpointer user_data) {
+    data *data = user_data;
+    on_mi_save_clicked(data->elements.mi_save, data);
+    destroy(GTK_WINDOW(data->elements.main_window), data);
+}
 
 // Free all allocated memory and destroy all windows
 void destroy(GtkWindow *self, gpointer user_data) {
