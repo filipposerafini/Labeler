@@ -1,7 +1,6 @@
 # LABELER
 Software per il labeling di immagini di training per algoritmi di deep-learning
 
-
 ## Installation
 
 Requierements:

@@ -3,7 +3,6 @@
 
 #include "gui.h"
 
-// CALLBACKS
 void resize_image(GtkWidget *widget, GdkRectangle *rectangle, gpointer user_data);
 
 void show_open_dialog(GtkMenuItem *image_menu_item, gpointer user_data);

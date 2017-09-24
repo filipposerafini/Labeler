@@ -48,7 +48,8 @@ void init_gui_elements(gui_elements *elements, GtkBuilder *builder) {
 void show_image(IplImage *img, GtkImage *image, GtkWidget *widget) {
     float ratio;
     // Create pixbuf from IplImage data
-    GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data((guchar *)img->imageData,GDK_COLORSPACE_RGB,FALSE,img->depth,img->width,img->height,img->widthStep,NULL,NULL);
+    GdkPixbuf *pixbuf = gdk_pixbuf_new_from_data((guchar *)img->imageData,
+            GDK_COLORSPACE_RGB,FALSE,img->depth,img->width,img->height,img->widthStep,NULL,NULL);
     int width = gdk_pixbuf_get_width(pixbuf);
     int height = gdk_pixbuf_get_height(pixbuf);
     GtkAllocation allocation;
