@@ -118,9 +118,9 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>init_gui_elements</b>
 <tr class="memitem:aa46dd4b95965aeebed8cd4e74563cfb1"><td class="memItemLeft" align="right" valign="top"><a class="el" href="label_8h.html#af6a258d8f3ee5206d682d799316314b1">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gui_8h.html#aa46dd4b95965aeebed8cd4e74563cfb1">convert_coordinates</a> (float pointer_x, float pointer_y, GtkWidget *widget, int *x, int *y, IplImage *img, GtkImage *image)</td></tr>
 <tr class="memdesc:aa46dd4b95965aeebed8cd4e74563cfb1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Convert coordinates.  <a href="#aa46dd4b95965aeebed8cd4e74563cfb1">More...</a><br /></td></tr>
 <tr class="separator:aa46dd4b95965aeebed8cd4e74563cfb1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8849c609b9d45b2e64845a99d595d8d5"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gui_8h.html#a8849c609b9d45b2e64845a99d595d8d5">save</a> (char *tmpfile, char *folder_name)</td></tr>
-<tr class="memdesc:a8849c609b9d45b2e64845a99d595d8d5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Save labels to file.  <a href="#a8849c609b9d45b2e64845a99d595d8d5">More...</a><br /></td></tr>
-<tr class="separator:a8849c609b9d45b2e64845a99d595d8d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad135c56d526b68c6815d00342319f73a"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="gui_8h.html#ad135c56d526b68c6815d00342319f73a">save</a> (char *tmpfile, char *filename)</td></tr>
+<tr class="memdesc:ad135c56d526b68c6815d00342319f73a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Save labels to file.  <a href="#ad135c56d526b68c6815d00342319f73a">More...</a><br /></td></tr>
+<tr class="separator:ad135c56d526b68c6815d00342319f73a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>User interface header file. </p>
@@ -217,7 +217,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>init_gui_elements</b>
 </div><div class="memdoc">
 
 <p>Open next image in selected directory. </p>
-<p>Search for the next valid image in selected directory accepting only .jpg/.png files, and shows it calling <a class="el" href="gui_8h.html#aa58fa8201117309e41c6409b87e1aee9" title="Show image in the image container. ">show_image()</a>.</p>
+<p>Search for the next valid image in selected directory, and shows it calling <a class="el" href="gui_8h.html#aa58fa8201117309e41c6409b87e1aee9" title="Show image in the image container. ">show_image()</a>.</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">data</td><td></td></tr>
@@ -228,8 +228,8 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>init_gui_elements</b>
 
 </div>
 </div>
-<a id="a8849c609b9d45b2e64845a99d595d8d5"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a8849c609b9d45b2e64845a99d595d8d5">&#9670;&nbsp;</a></span>save()</h2>
+<a id="ad135c56d526b68c6815d00342319f73a"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ad135c56d526b68c6815d00342319f73a">&#9670;&nbsp;</a></span>save()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -244,7 +244,7 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>init_gui_elements</b>
           <td class="paramkey"></td>
           <td></td>
           <td class="paramtype">char *&#160;</td>
-          <td class="paramname"><em>folder_name</em>&#160;</td>
+          <td class="paramname"><em>filename</em>&#160;</td>
         </tr>
         <tr>
           <td></td>
@@ -255,11 +255,11 @@ void&#160;</td><td class="memItemRight" valign="bottom"><b>init_gui_elements</b>
 </div><div class="memdoc">
 
 <p>Save labels to file. </p>
-<p>If exists, rename the temporary file used to store labels information to .csv output file, placing it in out/ in a folder named as give folder_name</p>
+<p>If exists, rename the temporary file used to store labels information to given filename,</p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">tmpfile</td><td>Temporary file name </td></tr>
-    <tr><td class="paramname">folder_name</td><td>Selected folder </td></tr>
+    <tr><td class="paramname">filename</td><td>Selected file name </td></tr>
   </table>
   </dd>
 </dl>

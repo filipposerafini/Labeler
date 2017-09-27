@@ -213,11 +213,13 @@ bool load_classes(char *filename, labels *dest) {
     if ((file = fopen(filename, "r")) != NULL) {
         int num;
         char class[64];
+        // Read classes count
         if (fscanf(file, "%d\n", &num) == EOF) { 
             fclose(file);
             return false;
         }
         reset_classes(dest);
+        // Read classes
         for (int i = 0; i < num; i++) {
             if (fscanf(file, "%s\n", class) == EOF) {
                 fclose(file);
@@ -234,10 +236,12 @@ bool load_classes(char *filename, labels *dest) {
 // Add a new class with given name to 'labels', incrementing counter
 bool add_class(char *name, labels* labels) {
     if (labels->classes_count < MAX_CLASSES) {
+        // Check if already exists
         for (int i = 0; i < labels->classes_count; i++) {
             if (!strcmp(labels->classes[i], name))
                 return false;
         }
+        // Save new class
         strcpy(labels->classes[labels->classes_count], name);
         labels->classes_count++;
         printf("Class %d -> %s\n", labels->classes_count - 1, name);

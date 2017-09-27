@@ -59,7 +59,7 @@ typedef struct {
 	labels labels;              /**< Labels struct */
     gchar *selected_folder;     /**< Currently selected source folder */
     gchar *selected_file;       /**< Currently selected source file */
-    struct dirent **dirlist;           /**< Dirent struct array of currenty selected source folder content*/
+    struct dirent **dirlist;    /**< Dirent struct array of currenty selected source folder content*/
     int dir_count;              /**< Dirlist logical dimention */ 
     int dir_position;           /**< Current position in the array */
     char *name;                 /**< Current image name */
@@ -87,7 +87,7 @@ void show_image(IplImage *img, GtkImage *image, GtkWidget *widget);
 
 /**
  * Open next image in selected directory.
- * Search for the next valid image in selected directory accepting only .jpg/.png files,
+ * Search for the next valid image in selected directory,
  * and shows it calling show_image().
  *
  * @param data
@@ -122,12 +122,11 @@ bool convert_coordinates(float pointer_x, float pointer_y, GtkWidget *widget, in
 
 /**
  * Save labels to file.
- * If exists, rename the temporary file used to store labels information to .csv output file,
- * placing it in out/ in a folder named as give folder_name
+ * If exists, rename the temporary file used to store labels information to given filename,
  *
  * @param tmpfile Temporary file name
- * @param folder_name Selected folder
+ * @param filename Selected file name
  */
-void save(char *tmpfile, char *folder_name);
+void save(char *tmpfile, char *filename);
 
 #endif

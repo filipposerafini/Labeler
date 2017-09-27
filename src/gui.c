@@ -71,7 +71,7 @@ void show_image(IplImage *img, GtkImage *image, GtkWidget *widget) {
     g_object_unref(pixbuf);
 }
 
-// Open and show next image in current directory, accepting only .jpg/.png formats.
+// Open and show next valid image in current directory
 // Returns true on success, false when there isn't any other valid image in current directory
 bool open_next_image(data *data) {
     struct dirent *dd = NULL;
