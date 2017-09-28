@@ -18,7 +18,7 @@
 #include <sys/stat.h>
 #include <sys/types.h>
 
-#define TMPFILE "out/.tmpfile"
+#define TMPFILE ".tmpfile"
 
 /**
  * Stores all GUI elements to interact with
