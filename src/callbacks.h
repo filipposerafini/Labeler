@@ -1,3 +1,8 @@
+/**
+ * @file callbacks.h
+ * @brief GTK event callback functions
+ * @author Filippo Serafini
+ */
 #ifndef CALLBACKS_H
 #define CALLBACKS_H
 
