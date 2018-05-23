@@ -1,13 +1,18 @@
-# LABELER
-Software per il labeling di immagini di training per algoritmi di deep-learning
+# Labeler
 
-## Installation
+Image labeling tool for deep-learning training algorithm.
 
-Requierements:
+## Requirements
+
 * [GTK+](https://www.gtk.org/)
 * [OpenCV](http://opencv.org/)
 
+## Usage
+
 To compile in unix run `make`
 
-### Git Repository
-[Labeler](https://github.com/filipposerafini/Labeler)
+## License
+
+Distributed under the [MIT](LICENSE) license.
+
+Copyright &copy; 2018, [Filippo Serafini](https://filipposerafini.github.io/)
